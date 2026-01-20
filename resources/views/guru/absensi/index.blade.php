@@ -407,53 +407,57 @@
         }
     }
 
-    // Submit Absen
-    async function submitAbsen(type) {
-        if (!currentPosition || !capturedImage) {
-            alert('Pastikan lokasi dan foto sudah siap!');
-            return;
-        }
-
-        // Show loading
-        const loadingModal = document.getElementById('loading-modal');
-        loadingModal.classList.remove('hidden');
-        loadingModal.classList.add('flex');
-        document.getElementById('loading-text').textContent = `Memproses absen ${type}...`;
-
-        try {
-            const response = await fetch('{{ route("guru.absensi.store") }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({
-                    tipe: type,
-                    latitude: currentPosition.lat,
-                    longitude: currentPosition.lng,
-                    foto: capturedImage
-                })
-            });
-
-            const result = await response.json();
-            
-            loadingModal.classList.add('hidden');
-            loadingModal.classList.remove('flex');
-
-            if (result.success) {
-                alert('✅ ' + result.message);
-                window.location.reload();
-            } else {
-                alert('❌ ' + result.message);
-            }
-        } catch (error) {
-            loadingModal.classList.add('hidden');
-            loadingModal.classList.remove('flex');
-            alert('Terjadi kesalahan. Silakan coba lagi.');
-            console.error('Error:', error);
-        }
+   // Submit Absen (Safe for HTTPS / HTTP)
+async function submitAbsen(type) {
+    if (!currentPosition || !capturedImage) {
+        alert('Pastikan lokasi dan foto sudah siap!');
+        return;
     }
+
+    // Show loading modal
+    const loadingModal = document.getElementById('loading-modal');
+    loadingModal.classList.remove('hidden');
+    loadingModal.classList.add('flex');
+    document.getElementById('loading-text').textContent = `Memproses absen ${type}...`;
+
+    try {
+        // Relative URL → otomatis ikut protocol halaman (HTTPS / HTTP)
+        const response = await fetch('/guru/absensi', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                tipe: type,
+                latitude: currentPosition.lat,
+                longitude: currentPosition.lng,
+                foto: capturedImage
+            })
+        });
+
+        const result = await response.json();
+
+        // Hide loading modal
+        loadingModal.classList.add('hidden');
+        loadingModal.classList.remove('flex');
+
+        if (result.success) {
+            alert('✅ ' + result.message);
+            window.location.reload();
+        } else {
+            alert('❌ ' + result.message);
+        }
+
+    } catch (error) {
+        loadingModal.classList.add('hidden');
+        loadingModal.classList.remove('flex');
+        alert('Terjadi kesalahan. Silakan coba lagi.');
+        console.error('Error:', error);
+    }
+}
+
 
     // Event listeners for buttons
     document.getElementById('btn-masuk').addEventListener('click', () => submitAbsen('masuk'));

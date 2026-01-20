@@ -60,16 +60,18 @@ class DatabaseSeeder extends Seeder
         LokasiSekolah::create([
             'nama_sekolah' => 'SMA Negeri 1 Contoh',
             'alamat' => 'Jl. Pendidikan No. 1, Jakarta',
-            'latitude' => -6.200000,
-            'longitude' => 106.816666,
-            'radius' => 100,
+            'latitude' => -6.50670,
+            'longitude' => 107.61231,
+            // 'latitude' => -6.200000,
+            // 'longitude' => 106.816666,
+            'radius' => 10000,
         ]);
 
         // Set Jam Kerja Default
         JamKerja::create([
             'jam_masuk' => '06:30:00',
             'jam_pulang' => '15:00:00',
-            'batas_absen_masuk' => '12:00:00',
+            'batas_absen_masuk' => '23:00:00',
             'batas_absen_pulang' => '22:00:00',
         ]);
     }
