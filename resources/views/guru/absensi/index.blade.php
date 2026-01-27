@@ -126,6 +126,39 @@
                     </span>
                 </div>
             </div>
+
+           <!-- Kegiatan Hari Ini -->
+            <div id="kegiatan-wrapper" class="mt-4 bg-white rounded-2xl card-shadow p-4 {{ ($statusHariIni['sudah_absen_masuk'] && !$statusHariIni['sudah_absen_pulang']) ? '' : 'hidden' }}">
+    <h4 class="font-semibold text-gray-800 mb-2">📝 Kegiatan Hari Ini</h4>
+
+    {{-- VIEW MODE (Tampil jika sudah ada isi kegiatan) --}}
+    <div id="kegiatan-view" class="{{ ($absensi && $absensi->kegiatan) ? '' : 'hidden' }}">
+        <p id="display-kegiatan" class="text-gray-700 whitespace-pre-line leading-relaxed mb-3 p-3 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+            {{ $absensi->kegiatan ?? '' }}
+        </p>
+        <button id="btn-edit-kegiatan" class="w-full bg-yellow-500 text-white py-3 rounded-xl font-semibold flex items-center justify-center">
+            ✏️ Edit Kegiatan
+        </button>
+    </div>
+
+    {{-- EDIT MODE (Tampil jika kegiatan kosong atau saat klik tombol Edit) --}}
+    <div id="kegiatan-form" class="{{ ($absensi && $absensi->kegiatan) ? 'hidden' : '' }}">
+        <textarea
+            id="kegiatan"
+            rows="3"
+            maxlength="1000"
+            class="w-full border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-primary-500"
+            placeholder="Tuliskan kegiatan hari ini..."
+        >{{ $absensi->kegiatan ?? '' }}</textarea>
+
+        <button id="btn-simpan-kegiatan" class="mt-3 w-full bg-blue-600 text-white py-3 rounded-xl font-semibold">
+            💾 Simpan Kegiatan
+        </button>
+    </div>
+</div>
+
+
+
         @endif
     </div>
 </div>
@@ -158,6 +191,26 @@
     let capturedImage = null;
     let isWithinRadius = false;
     let cameraStream = null;
+
+    function updateKegiatanVisibility() {
+    const wrapper = document.getElementById('kegiatan-wrapper');
+
+        // Sudah absen masuk, tapi belum pulang → tampilkan
+        if (CONFIG.sudahAbsenMasuk && !CONFIG.sudahAbsenPulang) {
+            wrapper.classList.remove('hidden');
+        } else {
+            wrapper.classList.add('hidden');
+        }
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+        initMap();
+        initCamera();
+        getLocation();
+        updateButtonState();
+        updateKegiatanVisibility(); // 👈 penting
+    });
+
+
 
     // Clock
     function updateClock() {
@@ -406,6 +459,105 @@
             btnPulang.disabled = !canAbsen;
         }
     }
+
+    async function simpanKegiatan() {
+    const kegiatan = document.getElementById('kegiatan').value.trim();
+
+        if (!kegiatan) {
+            alert('❗ Kegiatan tidak boleh kosong');
+            return;
+        }
+
+        const btn = document.getElementById('btn-simpan-kegiatan');
+        btn.disabled = true;
+        btn.textContent = 'Menyimpan...';
+
+    try {
+        const response = await fetch('/guru/absensi/kegiatan', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                kegiatan: kegiatan
+            })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            alert('✅ Kegiatan berhasil disimpan');
+        } else {
+            alert('❌ ' + result.message);
+        }
+
+    } catch (error) {
+        alert('Terjadi kesalahan saat menyimpan kegiatan');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = '💾 Simpan Kegiatan';
+    }
+}
+
+// Tambahkan listener untuk tombol Edit
+document.getElementById('btn-edit-kegiatan')?.addEventListener('click', () => {
+    document.getElementById('kegiatan-view').classList.add('hidden');
+    document.getElementById('kegiatan-form').classList.remove('hidden');
+    document.getElementById('kegiatan').focus();
+});
+
+// Update fungsi simpanKegiatan
+async function simpanKegiatan() {
+    const kegiatanInput = document.getElementById('kegiatan');
+    const kegiatanValue = kegiatanInput.value.trim();
+
+    if (!kegiatanValue) {
+        alert('❗ Kegiatan tidak boleh kosong');
+        return;
+    }
+
+    const btn = document.getElementById('btn-simpan-kegiatan');
+    btn.disabled = true;
+    btn.textContent = 'Menyimpan...';
+
+    try {
+        const response = await fetch('/guru/absensi/kegiatan', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ kegiatan: kegiatanValue })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            // Update teks di View Mode
+            document.getElementById('display-kegiatan').innerText = kegiatanValue;
+            
+            // Pindah ke View Mode (Sembunyikan form, tampilkan teks)
+            document.getElementById('kegiatan-form').classList.add('hidden');
+            document.getElementById('kegiatan-view').classList.remove('hidden');
+            
+            alert('✅ Kegiatan berhasil disimpan');
+        } else {
+            alert('❌ ' + result.message);
+        }
+    } catch (error) {
+        alert('Terjadi kesalahan saat menyimpan kegiatan');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = '💾 Simpan Kegiatan';
+    }
+}
+
+document.getElementById('btn-simpan-kegiatan')
+    .addEventListener('click', simpanKegiatan);
+
 
    // Submit Absen (Safe for HTTPS / HTTP)
 async function submitAbsen(type) {

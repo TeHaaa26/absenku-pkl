@@ -8,6 +8,7 @@ use App\Services\AbsensiService;
 use App\Models\LokasiSekolah;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Absensi;
 
 class AbsensiController extends Controller
 {
@@ -20,10 +21,18 @@ class AbsensiController extends Controller
 
     public function index()
     {
-        $lokasi = LokasiSekolah::first();
-        $statusHariIni = $this->absensiService->getStatusHariIni(Auth::user());
+    $lokasi = LokasiSekolah::first();
+    $statusHariIni = $this->absensiService->getStatusHariIni(Auth::user());
 
-        return view('guru.absensi.index', compact('lokasi', 'statusHariIni'));
+    $absensi = Absensi::where('user_id', auth()->id())
+        ->where('tanggal', now()->toDateString())
+        ->first();
+
+    return view('guru.absensi.index', compact(
+        'lokasi',
+        'statusHariIni',
+        'absensi'
+    ));
     }
 
     public function store(Request $request)
@@ -58,11 +67,38 @@ class AbsensiController extends Controller
 
         if ($result['success']) {
             return redirect()->route('guru.dashboard')
-                           ->with('success', $result['message']);
+                ->with('success', $result['message']);
         }
 
         return back()->with('error', $result['message']);
     }
+
+    public function simpanKegiatan(Request $request)
+    {
+        $request->validate([
+            'kegiatan' => 'required|string|max:2000',
+        ]);
+
+        $absensi = Absensi::where('user_id', auth()->id())
+            ->where('tanggal', now()->toDateString())
+            ->first();
+
+        if (!$absensi || !$absensi->jam_masuk) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda belum absen masuk hari ini'
+            ], 400);
+        }
+
+        $absensi->kegiatan = $request->kegiatan;
+        $absensi->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Kegiatan berhasil disimpan'
+        ]);
+    }
+    
 
     public function cekLokasi(Request $request)
     {

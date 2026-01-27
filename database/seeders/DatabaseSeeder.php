@@ -75,14 +75,14 @@ class DatabaseSeeder extends Seeder
             // 'longitude' => 107.61231,
             'latitude' => -6.55570,
             'longitude' => 107.75980,
-            'radius' => 100,
+            'radius' => 200,
         ]);
 
         // Set Jam Kerja Default
         JamKerja::create([
             'jam_masuk' => '06:30:00',
             'jam_pulang' => '15:00:00',
-            'batas_absen_masuk' => '12:00:00',
+            'batas_absen_masuk' => '16:00:00',
             'batas_absen_pulang' => '22:00:00',
         ]);
     }

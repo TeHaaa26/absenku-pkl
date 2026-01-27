@@ -27,7 +27,10 @@ return new class extends Migration
             $table->decimal('latitude_pulang', 10, 8)->nullable();
             $table->decimal('longitude_pulang', 11, 8)->nullable();
             $table->decimal('jarak_pulang', 10, 2)->nullable()->comment('dalam meter');
-            
+
+            //kegiatan
+            $table->text('kegiatan')->nullable();
+
             // Status & Keterangan
             $table->enum('status', [
                 'hadir', 

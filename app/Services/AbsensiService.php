@@ -19,12 +19,12 @@ class AbsensiService
     public function isHariLibur(?Carbon $tanggal = null): bool
     {
         $tanggal = $tanggal ?? Carbon::today();
-        
+
         // Cek hari Minggu
         if ($tanggal->dayOfWeek === Carbon::SUNDAY) {
             return true;
         }
-        
+
         // Cek di tabel hari libur
         return HariLibur::whereDate('tanggal', $tanggal)->exists();
     }
@@ -35,11 +35,11 @@ class AbsensiService
     public function getKeteranganLibur(?Carbon $tanggal = null): ?string
     {
         $tanggal = $tanggal ?? Carbon::today();
-        
+
         if ($tanggal->dayOfWeek === Carbon::SUNDAY) {
             return 'Hari Minggu';
         }
-        
+
         $libur = HariLibur::whereDate('tanggal', $tanggal)->first();
         return $libur?->keterangan;
     }
@@ -55,8 +55,8 @@ class AbsensiService
         $dLon = deg2rad($lon2 - $lon1);
 
         $a = sin($dLat / 2) * sin($dLat / 2) +
-             cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
-             sin($dLon / 2) * sin($dLon / 2);
+            cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
+            sin($dLon / 2) * sin($dLon / 2);
 
         $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
 
@@ -69,7 +69,7 @@ class AbsensiService
     public function validasiLokasi(float $latitude, float $longitude): array
     {
         $lokasi = LokasiSekolah::first();
-        
+
         if (!$lokasi) {
             return [
                 'valid' => false,
@@ -79,9 +79,9 @@ class AbsensiService
         }
 
         $jarak = $this->hitungJarak(
-            $latitude, 
-            $longitude, 
-            $lokasi->latitude, 
+            $latitude,
+            $longitude,
+            $lokasi->latitude,
             $lokasi->longitude
         );
 
@@ -89,8 +89,8 @@ class AbsensiService
 
         return [
             'valid' => $dalamRadius,
-            'message' => $dalamRadius 
-                ? "Anda dalam radius sekolah ({$jarak}m)" 
+            'message' => $dalamRadius
+                ? "Anda dalam radius sekolah ({$jarak}m)"
                 : "Anda di luar radius sekolah ({$jarak}m dari {$lokasi->radius}m)",
             'jarak' => $jarak,
             'radius' => $lokasi->radius,
@@ -133,8 +133,8 @@ class AbsensiService
 
         // Cek sudah absen atau belum
         $absensi = Absensi::where('user_id', $user->id)
-                         ->whereDate('tanggal', Carbon::today())
-                         ->first();
+            ->whereDate('tanggal', Carbon::today())
+            ->first();
 
         if ($absensi && $absensi->jam_masuk) {
             return [
@@ -172,11 +172,14 @@ class AbsensiService
                 'terlambat_menit' => $terlambatMenit,
             ]
         );
+        $message = "Absen masuk berhasil pada {$now->format('H:i')}";
 
-        $message = 'Absen masuk berhasil pada ' . $now->format('H:i');
         if ($status === 'terlambat') {
-            $message .= '. Anda terlambat ' . $absensi->terlambat_format;
+            $message .= "\n⏰ Anda terlambat {$absensi->terlambat_format}";
         }
+
+        $message .= "\n📝 Silahkan isi laporan kegiatan di bawah ini";
+
 
         return [
             'success' => true,
@@ -200,8 +203,8 @@ class AbsensiService
 
         // Cek sudah absen masuk atau belum
         $absensi = Absensi::where('user_id', $user->id)
-                         ->whereDate('tanggal', Carbon::today())
-                         ->first();
+            ->whereDate('tanggal', Carbon::today())
+            ->first();
 
         if (!$absensi || !$absensi->jam_masuk) {
             return [
@@ -281,7 +284,7 @@ class AbsensiService
     {
         $today = Carbon::today();
         $jamKerja = JamKerja::first();
-        
+
         // Cek hari libur
         if ($this->isHariLibur($today)) {
             return [
@@ -296,8 +299,8 @@ class AbsensiService
         }
 
         $absensi = Absensi::where('user_id', $user->id)
-                         ->whereDate('tanggal', $today)
-                         ->first();
+            ->whereDate('tanggal', $today)
+            ->first();
 
         return [
             'tanggal' => $today->format('Y-m-d'),
@@ -318,8 +321,8 @@ class AbsensiService
     public function getRekapBulanan(User $user, int $bulan, int $tahun): array
     {
         $absensi = Absensi::where('user_id', $user->id)
-                         ->byBulan($bulan, $tahun)
-                         ->get();
+            ->byBulan($bulan, $tahun)
+            ->get();
 
         $totalHariKerja = $this->hitungHariKerja($bulan, $tahun);
 

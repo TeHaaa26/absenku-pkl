@@ -48,6 +48,10 @@ Route::get('/home', function () {
     abort(403);
 });
 
+Route::post('/guru/absensi/kegiatan', [GuruAbsensiController::class, 'simpanKegiatan'])
+    ->middleware('auth');
+
+
 
 /*
 |--------------------------------------------------------------------------

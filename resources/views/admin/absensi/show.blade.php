@@ -89,7 +89,24 @@
             <p class="text-gray-400 text-center py-8">Belum absen pulang</p>
             @endif
         </div>
+
     </div>
+
+     <!-- Laporan kegiatan -->
+    <div class="mt-6 bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <h4 class="font-semibold text-gray-800 mb-3">📝 Kegiatan</h4>
+
+        @if($absensi->kegiatan)
+            <p class="text-gray-700 leading-relaxed whitespace-pre-line">
+                {{ $absensi->kegiatan }}
+            </p>
+        @else
+            <p class="text-gray-400">
+                Belum membuat laporan
+            </p>
+        @endif
+    </div>
+
     
     <a href="{{ route('admin.absensi.index') }}" class="inline-flex items-center text-primary-600 hover:text-primary-700">
         <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -1,5 +1,4 @@
 <?php
-// app/Models/Absensi.php
 
 namespace App\Models;
 
@@ -14,16 +13,25 @@ class Absensi extends Model
     protected $fillable = [
         'user_id',
         'tanggal',
+
+        // absen masuk
         'jam_masuk',
         'foto_masuk',
         'latitude_masuk',
         'longitude_masuk',
         'jarak_masuk',
+
+        // kegiatan
+        'kegiatan',
+
+        // absen pulang
         'jam_pulang',
         'foto_pulang',
         'latitude_pulang',
         'longitude_pulang',
         'jarak_pulang',
+
+        // status
         'status',
         'terlambat_menit',
         'keterangan',
@@ -40,47 +48,53 @@ class Absensi extends Model
         'terlambat_menit' => 'integer',
     ];
 
-    // Relationships
+    /* =====================
+     |  RELATIONSHIP
+     ===================== */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    // Accessors
+    /* =====================
+     |  ACCESSOR
+     ===================== */
     public function getFotoMasukUrlAttribute(): ?string
     {
-        return $this->foto_masuk ? asset('storage/' . $this->foto_masuk) : null;
+        return $this->foto_masuk
+            ? asset('storage/' . $this->foto_masuk)
+            : null;
     }
 
     public function getFotoPulangUrlAttribute(): ?string
     {
-        return $this->foto_pulang ? asset('storage/' . $this->foto_pulang) : null;
+        return $this->foto_pulang
+            ? asset('storage/' . $this->foto_pulang)
+            : null;
     }
 
     public function getStatusLabelAttribute(): string
     {
-        $labels = [
+        return [
             'hadir' => 'Hadir',
             'terlambat' => 'Terlambat',
             'alpha' => 'Alpha',
             'izin_sakit' => 'Izin Sakit',
             'izin_dinas' => 'Izin Dinas',
             'libur' => 'Libur',
-        ];
-        return $labels[$this->status] ?? $this->status;
+        ][$this->status] ?? $this->status;
     }
 
     public function getStatusColorAttribute(): string
     {
-        $colors = [
+        return [
             'hadir' => 'green',
             'terlambat' => 'yellow',
             'alpha' => 'red',
             'izin_sakit' => 'blue',
             'izin_dinas' => 'purple',
             'libur' => 'gray',
-        ];
-        return $colors[$this->status] ?? 'gray';
+        ][$this->status] ?? 'gray';
     }
 
     public function getTerlambatFormatAttribute(): string
@@ -88,17 +102,18 @@ class Absensi extends Model
         if ($this->terlambat_menit <= 0) {
             return '-';
         }
-        
-        $jam = floor($this->terlambat_menit / 60);
+
+        $jam = intdiv($this->terlambat_menit, 60);
         $menit = $this->terlambat_menit % 60;
-        
-        if ($jam > 0) {
-            return "{$jam} jam {$menit} menit";
-        }
-        return "{$menit} menit";
+
+        return $jam > 0
+            ? "{$jam} jam {$menit} menit"
+            : "{$menit} menit";
     }
 
-    // Scopes
+    /* =====================
+     |  SCOPES
+     ===================== */
     public function scopeHariIni($query)
     {
         return $query->whereDate('tanggal', Carbon::today());
@@ -106,13 +121,15 @@ class Absensi extends Model
 
     public function scopeBulanIni($query)
     {
-        return $query->whereMonth('tanggal', Carbon::now()->month)
-                     ->whereYear('tanggal', Carbon::now()->year);
+        return $query
+            ->whereMonth('tanggal', Carbon::now()->month)
+            ->whereYear('tanggal', Carbon::now()->year);
     }
 
     public function scopeByBulan($query, $bulan, $tahun)
     {
-        return $query->whereMonth('tanggal', $bulan)
-                     ->whereYear('tanggal', $tahun);
+        return $query
+            ->whereMonth('tanggal', $bulan)
+            ->whereYear('tanggal', $tahun);
     }
 }
