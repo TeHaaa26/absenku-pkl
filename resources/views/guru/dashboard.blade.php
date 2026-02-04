@@ -1,181 +1,219 @@
 @extends('layouts.guru')
 
-@section('title', 'Beranda')
+@section('title', 'Dashboard Pembimbing')
+@section('subtitle', 'Monitoring siswa bimbingan PKL Anda hari ini')
 
 @section('content')
-<div class="min-h-screen">
-    <!-- Header dengan Gradient -->
-    <div class="gradient-primary px-4 pt-8 pb-24 rounded-b-3xl">
-        <div class="flex items-center justify-between mb-6">
-            <div>
-                <p class="text-white/80 text-sm">{{ $greeting }} {{ $emoji }}</p>
-                <h1 class="text-white text-xl font-bold">{{ $user->nama }}</h1>
-                <p class="text-white/60 text-sm">{{ $user->nip }}</p>
+<div class="space-y-6">
+    <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+        <h1 class="text-2xl font-bold text-gray-800">Selamat Datang, {{ $guru->nama }}! 👋</h1>
+        <p class="text-gray-500">Anda sedang membimbing <strong>{{ $statistik['total_siswa'] }} siswa</strong> di berbagai lokasi PKL.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-500">Total Bimbingan</p>
+                    <p class="text-3xl font-bold text-indigo-600 mt-1">{{ $statistik['total_siswa'] }}</p>
+                </div>
+                <div class="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center">
+                    <svg class="w-7 h-7 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                </div>
             </div>
-            <div class="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center overflow-hidden">
-                @if($user->foto_profil)
-                    <img src="{{ $user->foto_profil_url }}" alt="Foto" class="w-full h-full object-cover">
-                @else
-                    <span class="text-white text-xl font-bold">{{ $user->inisial }}</span>
-                @endif
+        </div>
+
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-500">Hadir Hari Ini</p>
+                    <p class="text-3xl font-bold text-green-600 mt-1">{{ $statistik['hadir_hari_ini'] }}</p>
+                </div>
+                <div class="w-14 h-14 bg-green-50 rounded-2xl flex items-center justify-center">
+                    <svg class="w-7 h-7 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-500">Belum Absen</p>
+                    <p class="text-3xl font-bold text-red-600 mt-1">{{ $statistik['belum_absen'] }}</p>
+                </div>
+                <div class="w-14 h-14 bg-red-50 rounded-2xl flex items-center justify-center">
+                    <svg class="w-7 h-7 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
             </div>
         </div>
     </div>
-    
-    <!-- Main Content -->
-    <div class="px-4 -mt-16 pb-6">
-        <!-- Card Status Hari Ini -->
-        <div class="bg-white rounded-2xl card-shadow p-5 mb-4">
-            <div class="flex items-center justify-between mb-4">
-                <div>
-                    <p class="text-gray-500 text-sm">📅 {{ $statusHariIni['tanggal_lengkap'] }}</p>
+
+    <div class="space-y-6">
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <h1 class="text-2xl font-bold text-gray-800">Selamat Datang, {{ $guru->nama }}! 👋</h1>
+            <p class="text-gray-500">Anda sedang membimbing <strong>{{ $statistik['total_siswa'] }} siswa</strong>.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">📊 Statistik Bimbingan (7 Hari Terakhir)</h3>
+                <div style="position: relative; height: 300px; width: 100%;">
+                    <canvas id="chartMingguanGuru"></canvas>
                 </div>
-                <span id="live-clock" class="text-lg font-bold text-primary-600"></span>
             </div>
-            
-            @if($statusHariIni['is_libur'])
-                <!-- Status Libur -->
-                <div class="bg-gray-50 rounded-xl p-4 text-center">
-                    <span class="text-4xl">🏖️</span>
-                    <p class="text-gray-800 font-semibold mt-2">Hari Libur</p>
-                    <p class="text-gray-500 text-sm">{{ $statusHariIni['keterangan_libur'] }}</p>
+
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800">📝 Izin Menunggu</h3>
+                    @if($totalIzinPending > 0)
+                    <span class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-sm font-medium">{{ $totalIzinPending }}</span>
+                    @endif
                 </div>
-            @else
-                <!-- Status Absensi -->
-                <div class="grid grid-cols-2 gap-4">
-                    <!-- Absen Masuk -->
-                    <div class="bg-gray-50 rounded-xl p-4 text-center">
-                        <div class="w-12 h-12 mx-auto rounded-full flex items-center justify-center mb-2 {{ $statusHariIni['sudah_absen_masuk'] ?? false ? 'bg-green-100' : 'bg-gray-200' }}">
-                            @if($statusHariIni['sudah_absen_masuk'] ?? false)
-                                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                                </svg>
-                            @else
-                                <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                </svg>
-                            @endif
+
+                <div class="space-y-4">
+                    @forelse($izinPending as $izin)
+                    <div class="flex items-center justify-between py-3 border-b border-gray-50 last:border-0">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-sm font-semibold text-gray-600">
+                                {{ substr($izin->user->nama, 0, 1) }}
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm font-medium text-gray-800">{{ $izin->user->nama }}</p>
+                                <p class="text-xs text-gray-500">{{ $izin->jenis_izin }} • {{ $izin->durasi }} hari</p>
+                            </div>
                         </div>
-                        <p class="text-xs text-gray-500 mb-1">Masuk</p>
-                        <p class="text-lg font-bold {{ $statusHariIni['sudah_absen_masuk'] ?? false ? 'text-green-600' : 'text-gray-400' }}">
-                            {{ $statusHariIni['absensi']->jam_masuk ?? '--:--' }}
-                        </p>
-                        @if($statusHariIni['absensi'] && $statusHariIni['absensi']->status == 'terlambat')
-                            <span class="inline-block mt-1 px-2 py-0.5 bg-yellow-100 text-yellow-700 text-xs rounded-full">
-                                Terlambat {{ $statusHariIni['absensi']->terlambat_format }}
+                        <a href="{{ route('guru.izin.index') }}" class="text-indigo-600 text-sm font-medium hover:underline">
+                            Review
+                        </a>
+                    </div>
+                    @empty
+                    <div class="text-center py-8 text-gray-500">
+                        <p class="text-sm">Tidak ada permohonan izin</p>
+                    </div>
+                    @endforelse
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        </div>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+            <h3 class="text-lg font-semibold text-gray-800">📋 Status Absensi Siswa Bimbingan (Hari Ini)</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Siswa</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Lokasi PKL</th>
+                        <th class="px-6 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Jam Masuk</th>
+                        <th class="px-6 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-50">
+                    @forelse($siswaBimbingan as $item)
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-6 py-4">
+                            <div class="flex items-center">
+                                <div class="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-sm">
+                                    {{ substr($item->siswa->nama, 0, 1) }}
+                                </div>
+                                <div class="ml-3">
+                                    <p class="text-sm font-medium text-gray-800">{{ $item->siswa->nama }}</p>
+                                    <p class="text-xs text-gray-500">{{ $item->siswa->nisn }}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <p class="text-sm text-gray-700">{{ $item->lokasi->nama_tempat_pkl }}</p>
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <span class="text-sm font-medium {{ $item->absen_hari_ini ? 'text-gray-800' : 'text-gray-400 italic' }}">
+                                {{ $item->absen_hari_ini->jam_masuk ?? 'Belum absen' }}
                             </span>
-                        @endif
-                    </div>
-                    
-                    <!-- Absen Pulang -->
-                    <div class="bg-gray-50 rounded-xl p-4 text-center">
-                        <div class="w-12 h-12 mx-auto rounded-full flex items-center justify-center mb-2 {{ $statusHariIni['sudah_absen_pulang'] ?? false ? 'bg-green-100' : 'bg-gray-200' }}">
-                            @if($statusHariIni['sudah_absen_pulang'] ?? false)
-                                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                                </svg>
-                            @else
-                                <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                </svg>
-                            @endif
-                        </div>
-                        <p class="text-xs text-gray-500 mb-1">Pulang</p>
-                        <p class="text-lg font-bold {{ $statusHariIni['sudah_absen_pulang'] ?? false ? 'text-green-600' : 'text-gray-400' }}">
-                            {{ $statusHariIni['absensi']->jam_pulang ?? '--:--' }}
-                        </p>
-                    </div>
-                </div>
-                
-                <!-- Tombol Absen Cepat -->
-                @if(!($statusHariIni['sudah_absen_pulang'] ?? false))
-                <a href="{{ route('guru.absensi.index') }}" class="block mt-4">
-                    <div class="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl p-4 text-center text-white shadow-lg">
-                        <span class="font-semibold">
-                            @if(!($statusHariIni['sudah_absen_masuk'] ?? false))
-                                📍 Absen Masuk Sekarang
-                            @else
-                                🏠 Absen Pulang Sekarang
-                            @endif
-                        </span>
-                    </div>
-                </a>
-                @endif
-            @endif
-        </div>
-        
-        <!-- Menu Cepat -->
-        <div class="grid grid-cols-3 gap-3 mb-4">
-            <a href="{{ route('guru.absensi.index') }}" class="bg-white rounded-xl card-shadow p-4 text-center hover:shadow-md transition-shadow">
-                <div class="w-12 h-12 mx-auto rounded-full bg-blue-100 flex items-center justify-center mb-2">
-                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                    </svg>
-                </div>
-                <p class="text-sm font-medium text-gray-700">Absen</p>
-            </a>
-            
-            <a href="{{ route('guru.izin.create') }}" class="bg-white rounded-xl card-shadow p-4 text-center hover:shadow-md transition-shadow">
-                <div class="w-12 h-12 mx-auto rounded-full bg-orange-100 flex items-center justify-center mb-2">
-                    <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                    </svg>
-                </div>
-                <p class="text-sm font-medium text-gray-700">Ajukan Izin</p>
-            </a>
-            
-            <a href="{{ route('guru.riwayat.index') }}" class="bg-white rounded-xl card-shadow p-4 text-center hover:shadow-md transition-shadow">
-                <div class="w-12 h-12 mx-auto rounded-full bg-green-100 flex items-center justify-center mb-2">
-                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                    </svg>
-                </div>
-                <p class="text-sm font-medium text-gray-700">Riwayat</p>
-            </a>
-        </div>
-        
-        <!-- Rekap Bulan Ini -->
-        <div class="bg-white rounded-2xl card-shadow p-5">
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="font-semibold text-gray-800">📊 Rekap Bulan Ini</h2>
-                <a href="{{ route('guru.riwayat.index') }}" class="text-primary-600 text-sm font-medium">Lihat Detail →</a>
-            </div>
-            
-            <div class="grid grid-cols-4 gap-2 text-center">
-                <div class="p-3 bg-green-50 rounded-xl">
-                    <p class="text-2xl font-bold text-green-600">{{ $rekapBulanIni['hadir'] }}</p>
-                    <p class="text-xs text-gray-500">Hadir</p>
-                </div>
-                <div class="p-3 bg-yellow-50 rounded-xl">
-                    <p class="text-2xl font-bold text-yellow-600">{{ $rekapBulanIni['terlambat'] }}</p>
-                    <p class="text-xs text-gray-500">Terlambat</p>
-                </div>
-                <div class="p-3 bg-blue-50 rounded-xl">
-                    <p class="text-2xl font-bold text-blue-600">{{ $rekapBulanIni['izin_sakit'] + $rekapBulanIni['izin_dinas'] }}</p>
-                    <p class="text-xs text-gray-500">Izin</p>
-                </div>
-                <div class="p-3 bg-red-50 rounded-xl">
-                    <p class="text-2xl font-bold text-red-600">{{ $rekapBulanIni['alpha'] }}</p>
-                    <p class="text-xs text-gray-500">Alpha</p>
-                </div>
-            </div>
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            @php
+                            $status = $item->absen_hari_ini->status ?? 'belum_absen';
+                            $statusColors = [
+                            'hadir' => 'bg-green-100 text-green-700',
+                            'terlambat' => 'bg-yellow-100 text-yellow-700',
+                            'izin_sakit' => 'bg-blue-100 text-blue-700',
+                            'alpha' => 'bg-red-100 text-red-700',
+                            'belum_absen' => 'bg-gray-100 text-gray-400',
+                            ];
+                            @endphp
+                            <span class="inline-flex px-3 py-1 rounded-full text-xs font-medium {{ $statusColors[$status] }}">
+                                {{ str_replace('_', ' ', ucwords($status)) }}
+                            </span>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="4" class="px-6 py-12 text-center">
+                            <p class="text-gray-500 italic">Belum ada siswa yang diplot ke bimbingan Anda.</p>
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
 @endsection
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    // Live Clock
-    function updateClock() {
-        const now = new Date();
-        const hours = String(now.getHours()).padStart(2, '0');
-        const minutes = String(now.getMinutes()).padStart(2, '0');
-        const seconds = String(now.getSeconds()).padStart(2, '0');
-        document.getElementById('live-clock').textContent = `${hours}:${minutes}:${seconds}`;
-    }
-    
-    updateClock();
-    setInterval(updateClock, 1000);
+    const ctx = document.getElementById('chartMingguanGuru').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: {!! json_encode($chartData['labels']) !!},
+            datasets: [
+                {
+                    label: 'Hadir',
+                    data: {!! json_encode($chartData['hadir']) !!},
+                    backgroundColor: '#10b981',
+                    borderRadius: 6,
+                },
+                {
+                    label: 'Terlambat',
+                    data: {!! json_encode($chartData['terlambat']) !!},
+                    backgroundColor: '#f59e0b',
+                    borderRadius: 6,
+                },
+                {
+                    label: 'Alpha',
+                    data: {!! json_encode($chartData['tidakHadir']) !!},
+                    backgroundColor: '#ef4444',
+                    borderRadius: 6,
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom' }
+            },
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 1 } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
 </script>
 @endpush

@@ -13,7 +13,7 @@
             </div>
             <div class="ml-4">
                 <h3 class="text-lg font-bold text-gray-800">{{ $absensi->user->nama }}</h3>
-                <p class="text-gray-500">{{ $absensi->user->nip }}</p>
+                <p class="text-gray-500">{{ $absensi->user->nisn }}</p>
             </div>
             <div class="ml-auto">
                 @php

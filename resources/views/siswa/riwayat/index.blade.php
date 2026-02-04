@@ -1,4 +1,4 @@
-@extends('layouts.guru')
+@extends('layouts.siswa')
 
 @section('title', 'Riwayat Absensi')
 
@@ -13,7 +13,7 @@
     <div class="px-4 py-4 pb-24">
         <!-- Filter -->
         <div class="bg-white rounded-xl card-shadow p-4 mb-4">
-            <form method="GET" action="{{ route('guru.riwayat.index') }}" class="flex gap-2">
+            <form method="GET" action="{{ route('siswa.riwayat.index') }}" class="flex gap-2">
                 <select name="bulan" class="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent">
                     @foreach($listBulan as $key => $value)
                         <option value="{{ $key }}" {{ $bulan == $key ? 'selected' : '' }}>{{ $value }}</option>

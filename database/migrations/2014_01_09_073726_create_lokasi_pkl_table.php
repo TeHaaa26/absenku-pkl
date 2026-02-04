@@ -9,19 +9,25 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('lokasi_sekolah', function (Blueprint $table) {
+        Schema::create('lokasi_pkl', function (Blueprint $table) {
             $table->id();
-            $table->string('nama_sekolah', 150);
+            // Relasi ke tabel jam_kerja
+            $table->foreignId('jam_kerja_id')
+                ->nullable() 
+                ->constrained('jam_kerja')
+                ->onDelete('cascade'); // Jika jam kerja dihapus, lokasi terkait ikut terhapus
+
+            $table->string('nama_tempat_pkl', 150);
             $table->text('alamat')->nullable();
             $table->decimal('latitude', 10, 8);
             $table->decimal('longitude', 11, 8);
-            $table->integer('radius')->default(100)->comment('dalam meter');
+            $table->integer('radius')->default(100);
             $table->timestamps();
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('lokasi_sekolah');
+        Schema::dropIfExists('lokasi_pkl');
     }
 };

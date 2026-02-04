@@ -48,7 +48,7 @@
 </head>
 <body>
     <div class="header">
-        <h1>LAPORAN ABSENSI GURU</h1>
+        <h1>LAPORAN ABSENSI SISWA</h1>
         <p>Periode: {{ $namaBulan }} {{ $tahun }}</p>
         <p>Dicetak pada: {{ now()->format('d/m/Y H:i') }}</p>
     </div>
@@ -57,8 +57,8 @@
         <thead>
             <tr>
                 <th>No</th>
-                <th class="text-left">NIP</th>
-                <th class="text-left">Nama Guru</th>
+                <th class="text-left">NISN</th>
+                <th class="text-left">Nama Siswa</th>
                 <th>Hadir</th>
                 <th>Terlambat</th>
                 <th>Sakit</th>
@@ -70,8 +70,8 @@
             @foreach($dataRekap as $index => $data)
             <tr>
                 <td>{{ $index + 1 }}</td>
-                <td class="text-left">{{ $data['guru']->nip }}</td>
-                <td class="text-left">{{ $data['guru']->nama }}</td>
+                <td class="text-left">{{ $data['siswa']->nisn }}</td>
+                <td class="text-left">{{ $data['siswa']->nama }}</td>
                 <td>{{ $data['rekap']['hadir'] }}</td>
                 <td>{{ $data['rekap']['terlambat'] }}</td>
                 <td>{{ $data['rekap']['izin_sakit'] }}</td>

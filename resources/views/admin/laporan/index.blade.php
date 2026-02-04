@@ -61,7 +61,7 @@
                 <thead class="bg-gray-50">
                     <tr>
                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">No</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Nama Guru</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Nama Siswa</th>
                         <th class="px-6 py-4 text-center text-xs font-semibold text-gray-500 uppercase">Hadir</th>
                         <th class="px-6 py-4 text-center text-xs font-semibold text-gray-500 uppercase">Terlambat</th>
                         <th class="px-6 py-4 text-center text-xs font-semibold text-gray-500 uppercase">Sakit</th>
@@ -76,8 +76,8 @@
                         <td class="px-6 py-4 text-sm text-gray-500">{{ $index + 1 }}</td>
                         <td class="px-6 py-4">
                             <div>
-                                <p class="text-sm font-medium text-gray-800">{{ $data['guru']->nama }}</p>
-                                <p class="text-xs text-gray-500">{{ $data['guru']->nip }}</p>
+                                <p class="text-sm font-medium text-gray-800">{{ $data['siswa']->nama }}</p>
+                                <p class="text-xs text-gray-500">{{ $data['siswa']->nisn }}</p>
                             </div>
                         </td>
                         <td class="px-6 py-4 text-center">
@@ -116,7 +116,7 @@
                     @empty
                     <tr>
                         <td colspan="8" class="px-6 py-12 text-center text-gray-500">
-                            Tidak ada data guru
+                            Tidak ada data siswa
                         </td>
                     </tr>
                     @endforelse

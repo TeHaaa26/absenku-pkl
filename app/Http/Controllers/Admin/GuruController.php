@@ -3,19 +3,20 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Models\Guru;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\Rule;
 
 class GuruController extends Controller
 {
+    /**
+     * Tampilkan Daftar Guru
+     */
     public function index(Request $request)
     {
-        $query = User::guru();
+        $query = Guru::withCount('penempatan');
 
-        // Filter pencarian
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
@@ -25,125 +26,119 @@ class GuruController extends Controller
             });
         }
 
-        // Filter status
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
-        $guru = $query->orderBy('nama')->paginate(15);
-
+        $guru = $query->latest()->paginate(10);
         return view('admin.guru.index', compact('guru'));
     }
 
+    /**
+     * Form Tambah Guru
+     */
     public function create()
     {
         return view('admin.guru.create');
     }
 
+    /**
+     * Simpan Data Guru Baru
+     */
     public function store(Request $request)
     {
         $request->validate([
-            'nip' => 'required|string|max:30|unique:users',
-            'nama' => 'required|string|max:100',
-            'email' => 'required|email|unique:users',
-            'password' => 'required|string|min:8',
-            'jenis_kelamin' => 'nullable|in:L,P',
-            'no_telepon' => 'nullable|string|max:20',
-            'jabatan' => 'nullable|string|max:100',
-            'alamat' => 'nullable|string',
+            'nip' => 'required|unique:gurus,nip',
+            'nama' => 'required|string|max:255',
+            'email' => 'required|email|unique:gurus,email',
+            'password' => 'required|min:8',
             'foto_profil' => 'nullable|image|mimes:jpg,jpeg,png|max:1024',
-        ], [
-            'nip.required' => 'NIP wajib diisi',
-            'nip.unique' => 'NIP sudah terdaftar',
-            'nama.required' => 'Nama wajib diisi',
-            'email.required' => 'Email wajib diisi',
-            'email.unique' => 'Email sudah terdaftar',
-            'password.required' => 'Password wajib diisi',
-            'password.min' => 'Password minimal 8 karakter',
         ]);
 
-        $data = $request->except(['password', 'foto_profil']);
+        $data = $request->all();
         $data['password'] = Hash::make($request->password);
-        $data['role'] = 'guru';
-        $data['status'] = 'aktif';
+        $data['status'] = 'aktif'; // default status
 
         if ($request->hasFile('foto_profil')) {
-            $data['foto_profil'] = $request->file('foto_profil')->store('profil', 'public');
+            $data['foto_profil'] = $request->file('foto_profil')->store('profil_guru', 'public');
         }
 
-        User::create($data);
+        Guru::create($data);
 
-        return redirect()->route('admin.guru.index')
-                        ->with('success', 'Data guru berhasil ditambahkan.');
+        return redirect()->route('admin.guru.index')->with('success', 'Data guru berhasil ditambahkan.');
     }
 
+    /**
+     * Detail Guru
+     */
     public function show($id)
     {
-        $guru = User::guru()->findOrFail($id);
-        
-        $absensi = $guru->absensi()
-                       ->bulanIni()
-                       ->orderBy('tanggal', 'desc')
-                       ->get();
+        $guru = Guru::with(['penempatan.siswa', 'penempatan.lokasi'])
+                    ->withCount('penempatan')
+                    ->findOrFail($id);
 
-        return view('admin.guru.show', compact('guru', 'absensi'));
+        return view('admin.guru.show', compact('guru'));
     }
 
+    /**
+     * Form Edit Guru
+     */
     public function edit($id)
     {
-        $guru = User::guru()->findOrFail($id);
+        $guru = Guru::findOrFail($id);
         return view('admin.guru.edit', compact('guru'));
     }
 
+    /**
+     * Update Data Guru
+     */
     public function update(Request $request, $id)
     {
-        $guru = User::guru()->findOrFail($id);
+        $guru = Guru::findOrFail($id);
 
         $request->validate([
-            'nip' => ['required', 'string', 'max:30', Rule::unique('users')->ignore($guru->id)],
-            'nama' => 'required|string|max:100',
-            'email' => ['required', 'email', Rule::unique('users')->ignore($guru->id)],
-            'password' => 'nullable|string|min:8',
-            'jenis_kelamin' => 'nullable|in:L,P',
-            'no_telepon' => 'nullable|string|max:20',
-            'jabatan' => 'nullable|string|max:100',
-            'alamat' => 'nullable|string',
-            'status' => 'required|in:aktif,nonaktif',
+            'nip' => 'required|unique:gurus,nip,' . $id,
+            'nama' => 'required|string|max:255',
+            'email' => 'required|email|unique:gurus,email,' . $id,
+            'password' => 'nullable|min:8',
             'foto_profil' => 'nullable|image|mimes:jpg,jpeg,png|max:1024',
         ]);
 
         $data = $request->except(['password', 'foto_profil']);
 
+        // Update password jika diisi
         if ($request->filled('password')) {
             $data['password'] = Hash::make($request->password);
         }
 
+        // Update foto jika ada file baru
         if ($request->hasFile('foto_profil')) {
-            // Hapus foto lama
+            // Hapus foto lama jika ada
             if ($guru->foto_profil) {
                 Storage::disk('public')->delete($guru->foto_profil);
             }
-            $data['foto_profil'] = $request->file('foto_profil')->store('profil', 'public');
+            $data['foto_profil'] = $request->file('foto_profil')->store('profil_guru', 'public');
         }
 
         $guru->update($data);
 
-        return redirect()->route('admin.guru.index')
-                        ->with('success', 'Data guru berhasil diperbarui.');
+        return redirect()->route('admin.guru.index')->with('success', 'Data guru berhasil diperbarui.');
     }
 
+    /**
+     * Hapus Guru
+     */
     public function destroy($id)
     {
-        $guru = User::guru()->findOrFail($id);
-        
-        // Hapus foto profil
+        $guru = Guru::findOrFail($id);
+
+        // Hapus foto dari storage
         if ($guru->foto_profil) {
             Storage::disk('public')->delete($guru->foto_profil);
         }
-        
+
         $guru->delete();
 
-        return redirect()->route('admin.guru.index')
-                        ->with('success', 'Data guru berhasil dihapus.');
+        return redirect()->route('admin.guru.index')->with('success', 'Data guru berhasil dihapus.');
     }
 }

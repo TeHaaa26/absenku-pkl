@@ -25,13 +25,13 @@ class LaporanController extends Controller
         $bulan = $request->bulan ?? Carbon::now()->month;
         $tahun = $request->tahun ?? Carbon::now()->year;
 
-        $guru = User::guru()->aktif()->orderBy('nama')->get();
+        $siswa = User::siswa()->aktif()->orderBy('nama')->get();
 
         $dataRekap = [];
-        foreach ($guru as $g) {
-            $rekap = $this->absensiService->getRekapBulanan($g, $bulan, $tahun);
+        foreach ($siswa as $s) {
+            $rekap = $this->absensiService->getRekapBulanan($s, $bulan, $tahun);
             $dataRekap[] = [
-                'guru' => $g,
+                'siswa' => $s,
                 'rekap' => $rekap,
             ];
         }
@@ -74,13 +74,13 @@ class LaporanController extends Controller
         $bulan = $request->bulan ?? Carbon::now()->month;
         $tahun = $request->tahun ?? Carbon::now()->year;
 
-        $guru = User::guru()->aktif()->orderBy('nama')->get();
+        $siswa = User::siswa()->aktif()->orderBy('nama')->get();
 
         $dataRekap = [];
-        foreach ($guru as $g) {
-            $rekap = $this->absensiService->getRekapBulanan($g, $bulan, $tahun);
+        foreach ($siswa as $s) {
+            $rekap = $this->absensiService->getRekapBulanan($s, $bulan, $tahun);
             $dataRekap[] = [
-                'guru' => $g,
+                'siswa' => $s,
                 'rekap' => $rekap,
             ];
         }

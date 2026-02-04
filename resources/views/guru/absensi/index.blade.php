@@ -1,626 +1,141 @@
 @extends('layouts.guru')
 
-@section('title', 'Absensi')
+@section('title', 'Data Absensi')
+@section('subtitle', "Rekap absensi tanggal " . $tanggal->format('d M Y'))
+
 
 @section('content')
-<div class="min-h-screen bg-gray-50">
-    <!-- Header -->
-    <div class="gradient-primary px-4 py-6">
-        <div class="flex items-center justify-between">
-            <div>
-                <h1 class="text-white text-xl font-bold">📍 Absensi</h1>
-                <p class="text-white/80 text-sm">{{ now()->translatedFormat('l, d F Y') }}</p>
-            </div>
-            <span id="header-clock" class="text-white text-2xl font-bold"></span>
+<div class="space-y-6">
+    <!-- Filter -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex">
+        <div class="flex flex-wrap items-end justify-between gap-4">
+
+            <form method="GET" class="flex flex-wrap gap-3 items-end">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal</label>
+                    <input type="date" name="tanggal" value="{{ $tanggal->format('Y-m-d') }}"
+                        class="px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <select name="status" class="px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500">
+                        <option value="">Semua Status</option>
+                        <option value="hadir" {{ request('status') == 'hadir' ? 'selected' : '' }}>Hadir</option>
+                        <option value="terlambat" {{ request('status') == 'terlambat' ? 'selected' : '' }}>Terlambat</option>
+                        <option value="izin_sakit" {{ request('status') == 'izin_sakit' ? 'selected' : '' }}>Izin Sakit</option>
+                        <option value="izin_dinas" {{ request('status') == 'izin_dinas' ? 'selected' : '' }}>Izin Dinas</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Cari</label>
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Nama / NIP"
+                        class="px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500">
+                </div>
+                <button type="submit" class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700">
+                    Filter
+                </button>
+            </form>
+    
+          
         </div>
     </div>
-    
-    <div class="px-4 py-4 pb-24">
-        @if($statusHariIni['is_libur'])
-            <!-- Hari Libur -->
-            <div class="bg-white rounded-2xl card-shadow p-8 text-center">
-                <span class="text-6xl">🏖️</span>
-                <h2 class="text-xl font-bold text-gray-800 mt-4">Hari Libur</h2>
-                <p class="text-gray-500 mt-2">{{ $statusHariIni['keterangan_libur'] }}</p>
-                <p class="text-gray-400 text-sm mt-4">Tidak perlu melakukan absensi hari ini.</p>
-            </div>
-        @elseif(!$lokasi)
-            <!-- Lokasi Belum Diatur -->
-            <div class="bg-white rounded-2xl card-shadow p-8 text-center">
-                <span class="text-6xl">⚠️</span>
-                <h2 class="text-xl font-bold text-gray-800 mt-4">Lokasi Belum Diatur</h2>
-                <p class="text-gray-500 mt-2">Admin belum mengatur lokasi sekolah. Silakan hubungi admin.</p>
-            </div>
-        @else
-            <!-- Status Lokasi -->
-            <div id="location-status" class="mb-4 p-4 rounded-xl bg-gray-100 border border-gray-200">
-                <div class="flex items-center">
-                    <div class="animate-spin mr-3">
-                        <svg class="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                    </div>
-                    <span class="text-gray-600">Mendapatkan lokasi...</span>
-                </div>
-            </div>
-            
-            <!-- Peta -->
-            <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
-                <div id="map" class="h-48 w-full"></div>
-                <div class="p-3 border-t border-gray-100">
-                    <p class="text-sm text-gray-600">
-                        <span class="font-medium">{{ $lokasi->nama_sekolah }}</span><br>
-                        <span class="text-gray-400">Radius: {{ $lokasi->radius }} meter</span>
-                    </p>
-                </div>
-            </div>
-            
-            <!-- Camera Section -->
-            <div class="bg-white rounded-2xl card-shadow p-4 mb-4">
-                <h3 class="font-semibold text-gray-800 mb-3">📸 Foto Selfie</h3>
-                
-                <div class="relative bg-black rounded-xl overflow-hidden aspect-[4/3]">
-                    <video id="camera" class="w-full h-full object-cover" autoplay playsinline></video>
-                    <canvas id="canvas" class="hidden"></canvas>
-                    <img id="preview" src="" class="w-full h-full object-cover hidden">
-                    
-                    <!-- Camera error message -->
-                    <div id="camera-error" class="hidden absolute inset-0 bg-gray-800 flex items-center justify-center text-white text-center p-4">
-                        <div>
-                            <svg class="w-12 h-12 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
-                            </svg>
-                            <p class="text-sm">Kamera tidak dapat diakses</p>
-                            <p class="text-xs text-gray-400 mt-1">Pastikan izin kamera sudah diaktifkan</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="flex gap-2 mt-3">
-                    <button id="btn-capture" type="button" class="flex-1 bg-primary-600 text-white py-3 rounded-xl font-semibold flex items-center justify-center">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
-                        </svg>
-                        Ambil Foto
-                    </button>
-                    <button id="btn-retake" type="button" class="flex-1 bg-gray-200 text-gray-700 py-3 rounded-xl font-semibold hidden">
-                        🔄 Ulangi
-                    </button>
-                </div>
-            </div>
-            
-            <!-- Tombol Absen -->
-            <div class="grid grid-cols-2 gap-3">
-                <button id="btn-masuk" type="button" disabled
-                        class="py-4 rounded-xl font-semibold text-white bg-green-500 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
-                    </svg>
-                    Masuk
-                </button>
-                <button id="btn-pulang" type="button" disabled
-                        class="py-4 rounded-xl font-semibold text-white bg-orange-500 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-                    </svg>
-                    Pulang
-                </button>
-            </div>
-            
-            <!-- Info Status -->
-            <div class="mt-4 p-4 bg-white rounded-xl card-shadow">
-                <h4 class="font-medium text-gray-800 mb-2">Status Hari Ini:</h4>
-                <div class="flex justify-between text-sm">
-                    <span class="text-gray-500">Absen Masuk:</span>
-                    <span class="font-medium {{ ($statusHariIni['sudah_absen_masuk'] ?? false) ? 'text-green-600' : 'text-gray-400' }}">
-                        {{ $statusHariIni['absensi']->jam_masuk ?? 'Belum' }}
-                    </span>
-                </div>
-                <div class="flex justify-between text-sm mt-1">
-                    <span class="text-gray-500">Absen Pulang:</span>
-                    <span class="font-medium {{ ($statusHariIni['sudah_absen_pulang'] ?? false) ? 'text-green-600' : 'text-gray-400' }}">
-                        {{ $statusHariIni['absensi']->jam_pulang ?? 'Belum' }}
-                    </span>
-                </div>
-            </div>
 
-           <!-- Kegiatan Hari Ini -->
-            <div id="kegiatan-wrapper" class="mt-4 bg-white rounded-2xl card-shadow p-4 {{ ($statusHariIni['sudah_absen_masuk'] && !$statusHariIni['sudah_absen_pulang']) ? '' : 'hidden' }}">
-    <h4 class="font-semibold text-gray-800 mb-2">📝 Kegiatan Hari Ini</h4>
-
-    {{-- VIEW MODE (Tampil jika sudah ada isi kegiatan) --}}
-    <div id="kegiatan-view" class="{{ ($absensi && $absensi->kegiatan) ? '' : 'hidden' }}">
-        <p id="display-kegiatan" class="text-gray-700 whitespace-pre-line leading-relaxed mb-3 p-3 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-            {{ $absensi->kegiatan ?? '' }}
-        </p>
-        <button id="btn-edit-kegiatan" class="w-full bg-yellow-500 text-white py-3 rounded-xl font-semibold flex items-center justify-center">
-            ✏️ Edit Kegiatan
-        </button>
+    <!-- Statistik -->
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 text-center">
+            <p class="text-2xl font-bold text-gray-800">{{ $statistik['total_siswa'] }}</p>
+            <p class="text-sm text-gray-500">Total Siswa    </p>
+        </div>
+        <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 text-center">
+            <p class="text-2xl font-bold text-green-600">{{ $statistik['hadir'] }}</p>
+            <p class="text-sm text-gray-500">Hadir</p>
+        </div>
+        <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 text-center">
+            <p class="text-2xl font-bold text-yellow-600">{{ $statistik['terlambat'] }}</p>
+            <p class="text-sm text-gray-500">Terlambat</p>
+        </div>
+        <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 text-center">
+            <p class="text-2xl font-bold text-blue-600">{{ $statistik['izin'] }}</p>
+            <p class="text-sm text-gray-500">Izin</p>
+        </div>
+        <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 text-center">
+            <p class="text-2xl font-bold text-red-600">{{ $statistik['belum_absen'] }}</p>
+            <p class="text-sm text-gray-500">Belum Absen</p>
+        </div>
     </div>
 
-    {{-- EDIT MODE (Tampil jika kegiatan kosong atau saat klik tombol Edit) --}}
-    <div id="kegiatan-form" class="{{ ($absensi && $absensi->kegiatan) ? 'hidden' : '' }}">
-        <textarea
-            id="kegiatan"
-            rows="3"
-            maxlength="1000"
-            class="w-full border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-primary-500"
-            placeholder="Tuliskan kegiatan hari ini..."
-        >{{ $absensi->kegiatan ?? '' }}</textarea>
+    <!-- Tabel -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Siswa</th>
+                        <th class="px-6 py-4 text-center text-xs font-semibold text-gray-500 uppercase">Jam Masuk</th>
+                        <th class="px-6 py-4 text-center text-xs font-semibold text-gray-500 uppercase">Jam Pulang</th>
+                        <th class="px-6 py-4 text-center text-xs font-semibold text-gray-500 uppercase">Status</th>
+                        <th class="px-6 py-4 text-center text-xs font-semibold text-gray-500 uppercase">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-50">
+                    @forelse($absensi as $a)
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4">
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center">
+                                    <span class="text-primary-600 font-semibold text-sm">{{ $a->user->inisial }}</span>
+                                </div>
+                                <div class="ml-3">
+                                    <p class="text-sm font-medium text-gray-800">{{ $a->user->nama }}</p>
+                                    <p class="text-xs text-gray-500">{{ $a->user->nip }}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <span class="text-sm text-gray-800">{{ $a->jam_masuk ?? '-' }}</span>
+                            @if($a->terlambat_menit > 0)
+                            <p class="text-xs text-yellow-600">+{{ $a->terlambat_menit }} menit</p>
+                            @endif
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <span class="text-sm text-gray-800">{{ $a->jam_pulang ?? '-' }}</span>
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            @php
+                            $colors = [
+                            'hadir' => 'bg-green-100 text-green-700',
+                            'terlambat' => 'bg-yellow-100 text-yellow-700',
+                            'alpha' => 'bg-red-100 text-red-700',
+                            'izin_sakit' => 'bg-blue-100 text-blue-700',
+                            'izin_dinas' => 'bg-purple-100 text-purple-700',
+                            ];
+                            @endphp
+                            <span class="inline-flex px-3 py-1 rounded-full text-xs font-medium {{ $colors[$a->status] ?? 'bg-gray-100 text-gray-700' }}">
+                                {{ $a->status_label }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <a href="{{ route('guru.absensi.show', $a->id) }}" class="text-primary-600 hover:text-primary-700 text-sm font-medium">
+                                Detail
+                            </a>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="5" class="px-6 py-12 text-center text-gray-500">
+                            Tidak ada data absensi
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
 
-        <button id="btn-simpan-kegiatan" class="mt-3 w-full bg-blue-600 text-white py-3 rounded-xl font-semibold">
-            💾 Simpan Kegiatan
-        </button>
-    </div>
-</div>
-
-
-
+        @if($absensi->hasPages())
+        <div class="px-6 py-4 border-t border-gray-100">
+            {{ $absensi->withQueryString()->links() }}
+        </div>
         @endif
     </div>
 </div>
-
-<!-- Loading Modal -->
-<div id="loading-modal" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center">
-    <div class="bg-white rounded-2xl p-6 mx-4 text-center">
-        <div class="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-        <p class="mt-4 text-gray-600" id="loading-text">Memproses absensi...</p>
-    </div>
-</div>
-@endsection
-
-@push('scripts')
-<script>
-    // Config
-    const CONFIG = {
-        sekolah: {
-            lat: {{ $lokasi->latitude ?? 0 }},
-            lng: {{ $lokasi->longitude ?? 0 }},
-            radius: {{ $lokasi->radius ?? 100 }},
-            nama: "{{ $lokasi->nama_sekolah ?? '' }}"
-        },
-        sudahAbsenMasuk: {{ ($statusHariIni['sudah_absen_masuk'] ?? false) ? 'true' : 'false' }},
-        sudahAbsenPulang: {{ ($statusHariIni['sudah_absen_pulang'] ?? false) ? 'true' : 'false' }}
-    };
-
-    let map, userMarker, schoolMarker, radiusCircle;
-    let currentPosition = null;
-    let capturedImage = null;
-    let isWithinRadius = false;
-    let cameraStream = null;
-
-    function updateKegiatanVisibility() {
-    const wrapper = document.getElementById('kegiatan-wrapper');
-
-        // Sudah absen masuk, tapi belum pulang → tampilkan
-        if (CONFIG.sudahAbsenMasuk && !CONFIG.sudahAbsenPulang) {
-            wrapper.classList.remove('hidden');
-        } else {
-            wrapper.classList.add('hidden');
-        }
-    }
-    document.addEventListener('DOMContentLoaded', function() {
-        initMap();
-        initCamera();
-        getLocation();
-        updateButtonState();
-        updateKegiatanVisibility(); // 👈 penting
-    });
-
-
-
-    // Clock
-    function updateClock() {
-        const now = new Date();
-        const h = String(now.getHours()).padStart(2, '0');
-        const m = String(now.getMinutes()).padStart(2, '0');
-        const s = String(now.getSeconds()).padStart(2, '0');
-        document.getElementById('header-clock').textContent = `${h}:${m}:${s}`;
-    }
-    setInterval(updateClock, 1000);
-    updateClock();
-
-    // Initialize Map
-    function initMap() {
-        if (!CONFIG.sekolah.lat || !CONFIG.sekolah.lng) return;
-
-        map = L.map('map').setView([CONFIG.sekolah.lat, CONFIG.sekolah.lng], 17);
-        
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap'
-        }).addTo(map);
-
-        // School marker
-        const schoolIcon = L.divIcon({
-            html: '<div style="font-size: 24px;">🏫</div>',
-            iconSize: [30, 30],
-            className: 'school-marker'
-        });
-        
-        schoolMarker = L.marker([CONFIG.sekolah.lat, CONFIG.sekolah.lng], { icon: schoolIcon })
-            .addTo(map)
-            .bindPopup(`<b>${CONFIG.sekolah.nama}</b><br>Titik Lokasi Sekolah`);
-
-        // Radius circle
-        radiusCircle = L.circle([CONFIG.sekolah.lat, CONFIG.sekolah.lng], {
-            radius: CONFIG.sekolah.radius,
-            color: '#4f46e5',
-            fillColor: '#4f46e5',
-            fillOpacity: 0.1,
-            weight: 2
-        }).addTo(map);
-    }
-
-    // Calculate distance (Haversine formula)
-    function calculateDistance(lat1, lon1, lat2, lon2) {
-        const R = 6371000;
-        const dLat = (lat2 - lat1) * Math.PI / 180;
-        const dLon = (lon2 - lon1) * Math.PI / 180;
-        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                  Math.sin(dLon/2) * Math.sin(dLon/2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        return R * c;
-    }
-
-    // Get user location
-    function getLocation() {
-        if (!navigator.geolocation) {
-            showLocationStatus('error', 'Browser tidak mendukung geolocation');
-            return;
-        }
-
-        showLocationStatus('loading', 'Mendapatkan lokasi...');
-
-        const options = {
-            enableHighAccuracy: true,
-            timeout: 15000,
-            maximumAge: 0
-        };
-
-        navigator.geolocation.watchPosition(
-            (position) => {
-                currentPosition = {
-                    lat: position.coords.latitude,
-                    lng: position.coords.longitude,
-                    accuracy: position.coords.accuracy
-                };
-
-                // Update user marker
-                const userIcon = L.divIcon({
-                    html: '<div style="font-size: 20px;">📱</div>',
-                    iconSize: [24, 24],
-                    className: 'user-marker'
-                });
-
-                if (userMarker) {
-                    userMarker.setLatLng([currentPosition.lat, currentPosition.lng]);
-                } else {
-                    userMarker = L.marker([currentPosition.lat, currentPosition.lng], { icon: userIcon })
-                        .addTo(map)
-                        .bindPopup('Lokasi Anda');
-                }
-
-                // Calculate distance
-                const distance = calculateDistance(
-                    currentPosition.lat, currentPosition.lng,
-                    CONFIG.sekolah.lat, CONFIG.sekolah.lng
-                );
-
-                isWithinRadius = distance <= CONFIG.sekolah.radius;
-
-                if (isWithinRadius) {
-                    showLocationStatus('success', `✅ Dalam radius sekolah (${Math.round(distance)}m)`);
-                } else {
-                    showLocationStatus('error', `❌ Di luar radius (${Math.round(distance)}m dari ${CONFIG.sekolah.radius}m)`);
-                }
-
-                updateButtonState();
-
-                // Fit bounds to show both markers
-                if (map) {
-                    const bounds = L.latLngBounds([
-                        [currentPosition.lat, currentPosition.lng],
-                        [CONFIG.sekolah.lat, CONFIG.sekolah.lng]
-                    ]);
-                    map.fitBounds(bounds, { padding: [30, 30] });
-                }
-            },
-            (error) => {
-                let message = 'Gagal mendapatkan lokasi';
-                switch(error.code) {
-                    case error.PERMISSION_DENIED:
-                        message = 'Izin lokasi ditolak. Aktifkan GPS dan izinkan akses lokasi.';
-                        break;
-                    case error.POSITION_UNAVAILABLE:
-                        message = 'Informasi lokasi tidak tersedia.';
-                        break;
-                    case error.TIMEOUT:
-                        message = 'Waktu permintaan lokasi habis.';
-                        break;
-                }
-                showLocationStatus('error', message);
-            },
-            options
-        );
-    }
-
-    // Show location status
-    function showLocationStatus(type, message) {
-        const el = document.getElementById('location-status');
-        let bgClass, borderClass, textClass;
-        
-        switch(type) {
-            case 'success':
-                bgClass = 'bg-green-50';
-                borderClass = 'border-green-200';
-                textClass = 'text-green-700';
-                break;
-            case 'error':
-                bgClass = 'bg-red-50';
-                borderClass = 'border-red-200';
-                textClass = 'text-red-700';
-                break;
-            default:
-                bgClass = 'bg-gray-100';
-                borderClass = 'border-gray-200';
-                textClass = 'text-gray-600';
-        }
-        
-        el.className = `mb-4 p-4 rounded-xl ${bgClass} border ${borderClass}`;
-        el.innerHTML = `<span class="${textClass}">${message}</span>`;
-    }
-
-    // Initialize Camera
-    async function initCamera() {
-        const video = document.getElementById('camera');
-        const errorDiv = document.getElementById('camera-error');
-        
-        try {
-            cameraStream = await navigator.mediaDevices.getUserMedia({
-                video: { 
-                    facingMode: 'user',
-                    width: { ideal: 640 },
-                    height: { ideal: 480 }
-                },
-                audio: false
-            });
-            video.srcObject = cameraStream;
-            video.classList.remove('hidden');
-            errorDiv.classList.add('hidden');
-        } catch (err) {
-            console.error('Camera error:', err);
-            video.classList.add('hidden');
-            errorDiv.classList.remove('hidden');
-        }
-    }
-
-    // Capture photo
-    document.getElementById('btn-capture').addEventListener('click', function() {
-        const video = document.getElementById('camera');
-        const canvas = document.getElementById('canvas');
-        const preview = document.getElementById('preview');
-        
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        canvas.getContext('2d').drawImage(video, 0, 0);
-        
-        capturedImage = canvas.toDataURL('image/jpeg', 0.8);
-        preview.src = capturedImage;
-        
-        video.classList.add('hidden');
-        preview.classList.remove('hidden');
-        
-        document.getElementById('btn-capture').classList.add('hidden');
-        document.getElementById('btn-retake').classList.remove('hidden');
-        
-        updateButtonState();
-    });
-
-    // Retake photo
-    document.getElementById('btn-retake').addEventListener('click', function() {
-        const video = document.getElementById('camera');
-        const preview = document.getElementById('preview');
-        
-        capturedImage = null;
-        preview.classList.add('hidden');
-        video.classList.remove('hidden');
-        
-        document.getElementById('btn-capture').classList.remove('hidden');
-        document.getElementById('btn-retake').classList.add('hidden');
-        
-        updateButtonState();
-    });
-
-    // Update button state
-    function updateButtonState() {
-        const canAbsen = isWithinRadius && capturedImage;
-        const btnMasuk = document.getElementById('btn-masuk');
-        const btnPulang = document.getElementById('btn-pulang');
-        
-        // Button Masuk
-        if (CONFIG.sudahAbsenMasuk) {
-            btnMasuk.disabled = true;
-            btnMasuk.innerHTML = '✅ Sudah Masuk';
-        } else {
-            btnMasuk.disabled = !canAbsen;
-        }
-        
-        // Button Pulang
-        if (CONFIG.sudahAbsenPulang) {
-            btnPulang.disabled = true;
-            btnPulang.innerHTML = '✅ Sudah Pulang';
-        } else if (!CONFIG.sudahAbsenMasuk) {
-            btnPulang.disabled = true;
-        } else {
-            btnPulang.disabled = !canAbsen;
-        }
-    }
-
-    async function simpanKegiatan() {
-    const kegiatan = document.getElementById('kegiatan').value.trim();
-
-        if (!kegiatan) {
-            alert('❗ Kegiatan tidak boleh kosong');
-            return;
-        }
-
-        const btn = document.getElementById('btn-simpan-kegiatan');
-        btn.disabled = true;
-        btn.textContent = 'Menyimpan...';
-
-    try {
-        const response = await fetch('/guru/absensi/kegiatan', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({
-                kegiatan: kegiatan
-            })
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-            alert('✅ Kegiatan berhasil disimpan');
-        } else {
-            alert('❌ ' + result.message);
-        }
-
-    } catch (error) {
-        alert('Terjadi kesalahan saat menyimpan kegiatan');
-    } finally {
-        btn.disabled = false;
-        btn.textContent = '💾 Simpan Kegiatan';
-    }
-}
-
-// Tambahkan listener untuk tombol Edit
-document.getElementById('btn-edit-kegiatan')?.addEventListener('click', () => {
-    document.getElementById('kegiatan-view').classList.add('hidden');
-    document.getElementById('kegiatan-form').classList.remove('hidden');
-    document.getElementById('kegiatan').focus();
-});
-
-// Update fungsi simpanKegiatan
-async function simpanKegiatan() {
-    const kegiatanInput = document.getElementById('kegiatan');
-    const kegiatanValue = kegiatanInput.value.trim();
-
-    if (!kegiatanValue) {
-        alert('❗ Kegiatan tidak boleh kosong');
-        return;
-    }
-
-    const btn = document.getElementById('btn-simpan-kegiatan');
-    btn.disabled = true;
-    btn.textContent = 'Menyimpan...';
-
-    try {
-        const response = await fetch('/guru/absensi/kegiatan', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({ kegiatan: kegiatanValue })
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-            // Update teks di View Mode
-            document.getElementById('display-kegiatan').innerText = kegiatanValue;
-            
-            // Pindah ke View Mode (Sembunyikan form, tampilkan teks)
-            document.getElementById('kegiatan-form').classList.add('hidden');
-            document.getElementById('kegiatan-view').classList.remove('hidden');
-            
-            alert('✅ Kegiatan berhasil disimpan');
-        } else {
-            alert('❌ ' + result.message);
-        }
-    } catch (error) {
-        alert('Terjadi kesalahan saat menyimpan kegiatan');
-    } finally {
-        btn.disabled = false;
-        btn.textContent = '💾 Simpan Kegiatan';
-    }
-}
-
-document.getElementById('btn-simpan-kegiatan')
-    .addEventListener('click', simpanKegiatan);
-
-
-   // Submit Absen (Safe for HTTPS / HTTP)
-async function submitAbsen(type) {
-    if (!currentPosition || !capturedImage) {
-        alert('Pastikan lokasi dan foto sudah siap!');
-        return;
-    }
-
-    // Show loading modal
-    const loadingModal = document.getElementById('loading-modal');
-    loadingModal.classList.remove('hidden');
-    loadingModal.classList.add('flex');
-    document.getElementById('loading-text').textContent = `Memproses absen ${type}...`;
-
-    try {
-        // Relative URL → otomatis ikut protocol halaman (HTTPS / HTTP)
-        const response = await fetch('/guru/absensi', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({
-                tipe: type,
-                latitude: currentPosition.lat,
-                longitude: currentPosition.lng,
-                foto: capturedImage
-            })
-        });
-
-        const result = await response.json();
-
-        // Hide loading modal
-        loadingModal.classList.add('hidden');
-        loadingModal.classList.remove('flex');
-
-        if (result.success) {
-            alert('✅ ' + result.message);
-            window.location.reload();
-        } else {
-            alert('❌ ' + result.message);
-        }
-
-    } catch (error) {
-        loadingModal.classList.add('hidden');
-        loadingModal.classList.remove('flex');
-        alert('Terjadi kesalahan. Silakan coba lagi.');
-        console.error('Error:', error);
-    }
-}
-
-
-    // Event listeners for buttons
-    document.getElementById('btn-masuk').addEventListener('click', () => submitAbsen('masuk'));
-    document.getElementById('btn-pulang').addEventListener('click', () => submitAbsen('pulang'));
-
-    // Initialize
-    document.addEventListener('DOMContentLoaded', function() {
-        initMap();
-        initCamera();
-        getLocation();
-        updateButtonState();
-    });
-</script>
-@endpush
+@endsection 

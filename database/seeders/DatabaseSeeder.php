@@ -4,86 +4,97 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\User;
-use App\Models\LokasiSekolah;
+use App\Models\Guru;
+use App\Models\LokasiPkl;
 use App\Models\JamKerja;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
+use Faker\Factory as Faker;
 
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // Buat Admin
-        User::create([
-            'nip' => 'ADMIN001',
-            'nama' => 'Administrator',
-            'email' => 'admin@absenku.com',
-            'password' => Hash::make('admin123'),
-            'role' => 'admin',
-            'status' => 'aktif',
+        $faker = Faker::create('id_ID');
+
+        // 1. Set Jam Kerja Default
+        JamKerja::create([
+            'nama_shift' => 'Shift Pagi Umum', // Tambahkan nama shift jika ada di tabel
+            'jam_masuk' => '07:00:00',
+            'jam_pulang' => '15:30:00',
+            'batas_absen_masuk' => '09:00:00',
+            'batas_absen_pulang' => '20:00:00',
+        ]);
+        
+        JamKerja::create([
+            'nama_shift' => 'Shift Instansi',
+            'jam_masuk' => '07:30:00',
+            'jam_pulang' => '16:00:00',
+            'batas_absen_masuk' => '08:30:00',
+            'batas_absen_pulang' => '20:00:00',
         ]);
 
-        // Buat beberapa guru contoh
-        User::create([
-            'nip' => '198501152010011001',
-            'nama' => 'Ahmad Fauzi, S.Pd',
-            'email' => 'ahmad.fauzi@absenku.com',
-            'password' => Hash::make('guru123'),
-            'role' => 'guru',
-            'jenis_kelamin' => 'L',
-            'jabatan' => 'Guru Matematika',
-            'status' => 'aktif',
+        // 2. Buat Guru Pembimbing
+        Guru::create([
+            'nip' => '2',
+            'nama' => 'Budi Santoso, S.Pd',
+            'email' => 'budi@sekolah.sch.id',
+            'password' => bcrypt('2'),
+            'jabatan' => 'Pembimbing PKL',
         ]);
 
-        User::create([
-            'nip' => '199003212015022002',
-            'nama' => 'Siti Aminah, S.Pd',
-            'email' => 'siti.aminah@absenku.com',
-            'password' => Hash::make('guru123'),
-            'role' => 'guru',
-            'jenis_kelamin' => 'P',
-            'jabatan' => 'Guru Bahasa Indonesia',
-            'status' => 'aktif',
-        ]);
-
-        User::create([
-            'nip' => '198712102012011003',
-            'nama' => 'Budi Santoso, M.Pd',
-            'email' => 'budi.santoso@absenku.com',
-            'password' => Hash::make('guru123'),
-            'role' => 'guru',
-            'jenis_kelamin' => 'L',
-            'jabatan' => 'Guru Fisika',
-            'status' => 'aktif',
-        ]);
-
-        User::create([
-            'nip' => '123456789',
-            'nama' => 'Dzikri Pangestu',
-            'email' => 'dzikri.pangestu@absenku.com',
-            'password' => Hash::make('guru123'),
-            'role' => 'guru',
-            'jenis_kelamin' => 'L',
-            'jabatan' => 'Guru Informatika',
-            'status' => 'aktif',
-        ]);
-
-        // Set Lokasi Sekolah Default (Jakarta sebagai contoh)
-        LokasiSekolah::create([
-            'nama_sekolah' => 'SMA Negeri 1 Subang',
+        // 3. Set Lokasi PKL Default
+        LokasiPkl::create([
+            'nama_tempat_pkl' => 'SMKN Negeri 1 Subang',
             'alamat' => 'Jl. Arief Rahman Hakim No.35, Cigadung',
-            // 'latitude' => -6.50670,
-            // 'longitude' => 107.61231,
             'latitude' => -6.55570,
             'longitude' => 107.75980,
             'radius' => 200,
+            'jam_kerja_id' => 1
         ]);
 
-        // Set Jam Kerja Default
-        JamKerja::create([
-            'jam_masuk' => '06:30:00',
-            'jam_pulang' => '15:00:00',
-            'batas_absen_masuk' => '16:00:00',
-            'batas_absen_pulang' => '22:00:00',
+        // 4. Buat Admin
+        User::create([
+            'nisn' => 'ADMIN001',
+            'nama' => 'Administrator',
+            'email' => 'admin@absenku.com',
+            'password' => Hash::make('guru123'),
+            'role' => 'admin',
+            'status' => 'aktif',
         ]);
+        User::create([
+            'nisn' => '1',
+            'nama' => 'Alifth',
+            'email' => 'al@absenku.com',
+            'password' => Hash::make('1'),
+            'role' => 'siswa',
+            'status' => 'aktif',
+        ]);
+        User::create([
+            'nisn' => '3',
+            'nama' => 'u',
+            'email' => 'adfh@absenku.com',
+            'password' => Hash::make('1'),
+            'role' => 'siswa',
+            'status' => 'aktif',
+        ]);
+
+        // 5. Buat 100 Siswa Dummy (Menggunakan Model User agar bisa login)
+        $jurusan = ['XII RPL 1', 'XII RPL 2', 'XII TKJ 1', 'XII TKJ 2', 'XII MM 1'];
+
+        // for ($i = 1; $i <= 100; $i++) {
+        //     User::create([
+        //         'nisn' => $faker->unique()->numerify('00########'),
+        //         'nama' => $faker->name,
+        //         'email' => $faker->unique()->safeEmail,
+        //         'password' => Hash::make('siswa123'),
+        //         'role' => 'siswa',
+        //         'jenis_kelamin' => $faker->randomElement(['L', 'P']),
+        //         'jurusan' => $faker->randomElement($jurusan),
+        //         'status' => 'aktif',
+        //         'created_at' => now(),
+        //         'updated_at' => now(),
+        //     ]);
+        // }
     }
 }

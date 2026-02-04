@@ -1,24 +1,27 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta name="theme-color" content="#4F46E5">
-    
-    <title>@yield('title', 'AbsenKu') - AbsenKu</title>
-    
+
+    <title>@yield('title', 'Dashboard') - Admin AbsenKu</title>
+
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Leaflet CSS untuk Maps -->
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    
+
     <script>
         tailwind.config = {
             theme: {
@@ -44,147 +47,178 @@
             }
         }
     </script>
-    
+
     <style>
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
         }
-        
-        /* Hide scrollbar */
-        .hide-scrollbar::-webkit-scrollbar {
-            display: none;
+
+        .sidebar-link {
+            transition: all 0.2s ease;
         }
-        .hide-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
+
+        .sidebar-link:hover {
+            background: rgba(255, 255, 255, 0.1);
         }
-        
-        /* Gradient background */
+
+        .sidebar-link.active {
+            background: rgba(255, 255, 255, 0.15);
+            border-left: 3px solid #fff;
+        }
+
         .gradient-primary {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
-        
-        /* Card shadow */
-        .card-shadow {
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-        }
-        
-        /* Bottom nav safe area */
-        .safe-bottom {
-            padding-bottom: env(safe-area-inset-bottom, 0px);
-        }
-        
-        /* Active nav item */
-        .nav-active {
-            color: #4f46e5;
-        }
-        .nav-active svg {
-            stroke: #4f46e5;
-        }
-        
-        /* Pulse animation */
-        @keyframes pulse-ring {
-            0% {
-                transform: scale(0.8);
-                opacity: 1;
-            }
-            100% {
-                transform: scale(1.3);
-                opacity: 0;
-            }
-        }
-        .pulse-ring {
-            animation: pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
-        }
     </style>
-    
+
     @stack('styles')
 </head>
-<body class="bg-gray-50 min-h-screen pb-20">
-    
-    <!-- Flash Messages -->
-    @if(session('success'))
-    <div id="flash-success" class="fixed top-4 left-4 right-4 z-50 bg-green-500 text-white px-4 py-3 rounded-xl shadow-lg flex items-center animate-pulse">
-        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-        </svg>
-        {{ session('success') }}
-    </div>
-    <script>
-        setTimeout(() => {
-            document.getElementById('flash-success').style.display = 'none';
-        }, 3000);
-    </script>
-    @endif
-    
-    @if(session('error'))
-    <div id="flash-error" class="fixed top-4 left-4 right-4 z-50 bg-red-500 text-white px-4 py-3 rounded-xl shadow-lg flex items-center">
-        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-        </svg>
-        {{ session('error') }}
-    </div>
-    <script>
-        setTimeout(() => {
-            document.getElementById('flash-error').style.display = 'none';
-        }, 3000);
-    </script>
-    @endif
 
-    <!-- Main Content -->
-    <main>
-        @yield('content')
-    </main>
+<body class="bg-gray-50">
+    <div class="flex h-screen overflow-hidden">
 
-    <!-- Bottom Navigation -->
-    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 shadow-lg z-40 safe-bottom">
-        <div class="flex justify-around items-center py-2 px-2 max-w-lg mx-auto">
-            <!-- Beranda -->
-            <a href="{{ route('guru.dashboard') }}" class="flex flex-col items-center justify-center py-2 px-3 rounded-xl transition-all {{ request()->routeIs('guru.dashboard') ? 'nav-active bg-primary-50' : 'text-gray-500' }}">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-                </svg>
-                <span class="text-xs mt-1 font-medium">Beranda</span>
-            </a>
-            
-            <!-- Absen -->
-            <a href="{{ route('guru.absensi.index') }}" class="flex flex-col items-center justify-center py-2 px-3 rounded-xl transition-all {{ request()->routeIs('guru.absensi.*') ? 'nav-active bg-primary-50' : 'text-gray-500' }}">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                </svg>
-                <span class="text-xs mt-1 font-medium">Absen</span>
-            </a>
-            
-            <!-- Izin -->
-            <a href="{{ route('guru.izin.index') }}" class="flex flex-col items-center justify-center py-2 px-3 rounded-xl transition-all {{ request()->routeIs('guru.izin.*') ? 'nav-active bg-primary-50' : 'text-gray-500' }}">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                </svg>
-                <span class="text-xs mt-1 font-medium">Izin</span>
-            </a>
-            
-            <!-- Riwayat -->
-            <a href="{{ route('guru.riwayat.index') }}" class="flex flex-col items-center justify-center py-2 px-3 rounded-xl transition-all {{ request()->routeIs('guru.riwayat.*') ? 'nav-active bg-primary-50' : 'text-gray-500' }}">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                <span class="text-xs mt-1 font-medium">Riwayat</span>
-            </a>
-            
-            <!-- Profil -->
-            <a href="{{ route('guru.profil.index') }}" class="flex flex-col items-center justify-center py-2 px-3 rounded-xl transition-all {{ request()->routeIs('guru.profil.*') ? 'nav-active bg-primary-50' : 'text-gray-500' }}">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                </svg>
-                <span class="text-xs mt-1 font-medium">Profil</span>
-            </a>
+        <!-- Sidebar -->
+        <aside class="hidden md:flex md:flex-shrink-0">
+            <div class="flex flex-col w-64 gradient-primary">
+                <!-- Logo -->
+                <div class="flex items-center justify-center h-16 px-4 border-b border-white/10">
+                    <h1 class="text-xl font-bold text-white">📋 AbsenKu</h1>
+                </div>
+
+                <!-- Navigation -->
+                <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+                    <a href="{{ route('guru.dashboard') }}"
+                        class="sidebar-link flex items-center px-4 py-3 text-white rounded-lg {{ request()->routeIs('guru.dashboard') ? 'active' : '' }}">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                        </svg>
+                        Dashboard
+                    </a>
+
+                    <a href="{{ route('guru.izin.index') }}"
+                        class="sidebar-link flex items-center px-4 py-3 text-white rounded-lg {{ request()->routeIs('guru.izin.*') ? 'active' : '' }}">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        Pengajuan Izin
+
+                        @php
+                        // 1. Ambil ID Guru yang sedang login (menggunakan guard guru)
+                        $idGuru = Auth::guard('guru')->id();
+
+                        // 2. Ambil daftar ID Siswa yang dibimbing oleh guru ini melalui tabel penempatan
+                        $daftarSiswaId = \App\Models\PenempatanPkl::where('guru_id', $idGuru)
+                        ->pluck('siswa_id');
+
+                        // 3. Hitung izin yang 'pending' HANYA untuk siswa-siswa tersebut
+                        $pendingCount = \App\Models\Izin::whereIn('user_id', $daftarSiswaId)
+                        ->where('status', 'pending')
+                        ->count();
+                        @endphp
+
+                        @if($pendingCount > 0)
+                        <span class="ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">{{ $pendingCount }}</span>
+                        @endif
+                    </a>
+
+                    <a href="{{ route('guru.siswa.index') }}"
+                        class="sidebar-link flex items-center px-4 py-3 text-white rounded-lg {{ request()->routeIs('guru.siswa.*') ? 'active' : '' }}">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                        Siswa Bimbingan
+                    </a>
+
+                    <a href="{{ route('guru.absensi.index') }}"
+                        class="sidebar-link flex items-center px-4 py-3 text-white rounded-lg {{ request()->routeIs('guru.absensi.*') ? 'active' : '' }}">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                        </svg>
+                        Monitoring Absensi
+                    </a>
+
+
+                    <div class="pt-4 mt-4 border-t border-white/10">
+                        <p class="px-4 text-xs font-semibold text-white/60 uppercase tracking-wider">Pengaturan</p>
+                    </div>
+
+                    <a href="{{ route('guru.laporan.index') }}"
+                        class="sidebar-link flex items-center px-4 py-3 text-white rounded-lg {{ request()->routeIs('guru.laporan.*') ? 'active' : '' }}">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                        </svg>
+                        Laporan Bulanan
+                    </a>
+                </nav>
+
+                <!-- User Info -->
+                <div class="p-4 border-t border-white/10">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-white font-semibold">
+                            {{ Auth::guard('guru')->user()?->inisial }}
+                        </div>
+                        <div class="ml-3 flex-1">
+                            <p class="text-sm font-medium text-white">{{ Auth::guard('guru')->user()?->nama }}</p>
+                            <p class="text-xs text-white/60">Administrator</p>
+                        </div>
+                        <form action="{{ route('logout') }}" method="POST">
+                            @csrf
+                            <button type="submit" class="p-2 text-white/60 hover:text-white transition-colors" title="Logout">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                </svg>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="flex flex-col flex-1 overflow-hidden">
+            <!-- Top Header -->
+            <header class="bg-white border-b border-gray-200 shadow-sm">
+                <div class="flex items-center justify-between px-6 py-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-800">@yield('title', 'Dashboard')</h2>
+                        <p class="text-sm text-gray-500">@yield('subtitle', '')</p>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <span class="text-sm text-gray-500">{{ now()->translatedFormat('l, d F Y') }}</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <main class="flex-1 overflow-y-auto p-6">
+                <!-- Flash Messages -->
+                @if(session('success'))
+                <div class="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    {{ session('success') }}
+                </div>
+                @endif
+
+                @if(session('error'))
+                <div class="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                    {{ session('error') }}
+                </div>
+                @endif
+
+                @yield('content')
+            </main>
         </div>
-    </nav>
+    </div>
 
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    
+
     @stack('scripts')
 </body>
+
 </html>

@@ -98,15 +98,22 @@
                         </svg>
                         Data Guru
                     </a>
+
+                    <a href="{{ route('admin.siswa.index') }}" class="sidebar-link flex items-center px-4 py-3 text-white rounded-lg {{ request()->routeIs('admin.siswa.*') ? 'active' : '' }}">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342M6.75 15a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm0 0v-3.675A55.378 55.378 0 0 1 12 8.443m-7.007 11.55A5.981 5.981 0 0 0 6.75 15.75v-1.5"/>
+                        </svg>
+                        Data Siswa
+                    </a>
                     
-                    <a href="{{ route('admin.absensi.index') }}" class="sidebar-link flex items-center px-4 py-3 text-white rounded-lg {{ request()->routeIs('admin.absensi.*') ? 'active' : '' }}">
+                    <!-- <a href="{{ route('admin.absensi.index') }}" class="sidebar-link flex items-center px-4 py-3 text-white rounded-lg {{ request()->routeIs('admin.absensi.*') ? 'active' : '' }}">
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
                         </svg>
                         Data Absensi
-                    </a>
+                    </a> -->
                     
-                    <a href="{{ route('admin.izin.index') }}" class="sidebar-link flex items-center px-4 py-3 text-white rounded-lg {{ request()->routeIs('admin.izin.*') ? 'active' : '' }}">
+                    <!-- <a href="{{ route('admin.izin.index') }}" class="sidebar-link flex items-center px-4 py-3 text-white rounded-lg {{ request()->routeIs('admin.izin.*') ? 'active' : '' }}">
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
@@ -117,7 +124,7 @@
                         @if($pendingCount > 0)
                         <span class="ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">{{ $pendingCount }}</span>
                         @endif
-                    </a>
+                    </a> -->
                     
                     <div class="pt-4 mt-4 border-t border-white/10">
                         <p class="px-4 text-xs font-semibold text-white/60 uppercase tracking-wider">Pengaturan</p>
@@ -128,7 +135,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                         </svg>
-                        Lokasi Sekolah
+                        Lokasi PKL
                     </a>
                     
                     <a href="{{ route('admin.jam-kerja.index') }}" class="sidebar-link flex items-center px-4 py-3 text-white rounded-lg {{ request()->routeIs('admin.jam-kerja.*') ? 'active' : '' }}">
@@ -136,6 +143,13 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                         Jam Kerja
+                    </a>
+
+                    <a href="{{ route('admin.penempatan-pkl.index') }}" class="sidebar-link flex items-center px-4 py-3 text-white rounded-lg {{ request()->routeIs('admin.penempatan-pkl.*') ? 'active' : '' }}">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 6.75V15m6-6v8.25m.503 3.498 4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 0 0-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0Z"/>
+                        </svg>
+                        Penempatan PKL
                     </a>
                     
                     <a href="{{ route('admin.hari-libur.index') }}" class="sidebar-link flex items-center px-4 py-3 text-white rounded-lg {{ request()->routeIs('admin.hari-libur.*') ? 'active' : '' }}">

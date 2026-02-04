@@ -1,4 +1,4 @@
-@extends('layouts.guru')
+@extends('layouts.siswa')
 
 @section('title', 'Ajukan Izin')
 
@@ -7,7 +7,7 @@
     <!-- Header -->
     <div class="gradient-primary px-4 py-6">
         <div class="flex items-center">
-            <a href="{{ route('guru.izin.index') }}" class="mr-3 text-white">
+            <a href="{{ route('siswa.izin.index') }}" class="mr-3 text-white">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                 </svg>
@@ -20,7 +20,7 @@
     </div>
     
     <div class="px-4 py-4 pb-24">
-        <form action="{{ route('guru.izin.store') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
+        <form action="{{ route('siswa.izin.store') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
             @csrf
             
             <!-- Jenis Izin -->

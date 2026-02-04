@@ -21,12 +21,12 @@
 
     <!-- Statistik Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <!-- Total Guru -->
+        <!-- Total Siswa -->
         <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-500">Total Guru Aktif</p>
-                    <p class="text-3xl font-bold text-gray-800 mt-1">{{ $totalGuru }}</p>
+                    <p class="text-sm font-medium text-gray-500">Total Siswa Aktif</p>
+                    <p class="text-3xl font-bold text-gray-800 mt-1">{{ $totalSiswa }}</p>
                 </div>
                 <div class="w-14 h-14 bg-indigo-100 rounded-2xl flex items-center justify-center">
                     <svg class="w-7 h-7 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -146,7 +146,7 @@
             <table class="w-full">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Guru</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Siswa</th>
                         <th class="px-6 py-3 text-center text-xs font-semibold text-gray-500 uppercase">Masuk</th>
                         <th class="px-6 py-3 text-center text-xs font-semibold text-gray-500 uppercase">Pulang</th>
                         <th class="px-6 py-3 text-center text-xs font-semibold text-gray-500 uppercase">Status</th>

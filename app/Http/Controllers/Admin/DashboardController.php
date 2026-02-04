@@ -21,7 +21,7 @@ class DashboardController extends Controller
     public function index()
     {
         $today = Carbon::today();
-        $totalGuru = User::guru()->aktif()->count();
+        $totalSiswa = User::siswa()->aktif()->count();
 
         // Statistik hari ini
         $absensiHariIni = Absensi::with('user')
@@ -34,7 +34,7 @@ class DashboardController extends Controller
             'hadir' => $absensiHariIni->where('status', 'hadir')->count(),
             'terlambat' => $absensiHariIni->where('status', 'terlambat')->count(),
             'izin' => $absensiHariIni->whereIn('status', ['izin_sakit', 'izin_dinas'])->count(),
-            'belum_absen' => $totalGuru - $sudahAbsen,
+            'belum_absen' => $totalSiswa - $sudahAbsen,
         ];
 
         // Izin pending
@@ -47,7 +47,7 @@ class DashboardController extends Controller
         $totalIzinPending = Izin::pending()->count();
 
         // Data untuk grafik mingguan
-        $chartData = $this->getChartDataMingguan($totalGuru);
+        $chartData = $this->getChartDataMingguan($totalSiswa);
 
         // Absensi terbaru hari ini
         $absensiTerbaru = Absensi::with('user')
@@ -61,7 +61,7 @@ class DashboardController extends Controller
         $keteranganLibur = $this->absensiService->getKeteranganLibur($today);
 
         return view('admin.dashboard', compact(
-            'totalGuru',
+            'totalSiswa',
             'statistikHariIni',
             'izinPending',
             'totalIzinPending',
@@ -72,7 +72,7 @@ class DashboardController extends Controller
         ));
     }
 
-    private function getChartDataMingguan($totalGuru)
+    private function getChartDataMingguan($totalSiswa)
     {
         $labels = [];
         $hadir = [];
@@ -86,7 +86,7 @@ class DashboardController extends Controller
             $absensi = Absensi::whereDate('tanggal', $date)->get();
             $hadir[] = $absensi->where('status', 'hadir')->count();
             $terlambat[] = $absensi->where('status', 'terlambat')->count();
-            $tidakHadir[] = $totalGuru - $absensi->count();
+            $tidakHadir[] = $totalSiswa - $absensi->count();
         }
 
         return [

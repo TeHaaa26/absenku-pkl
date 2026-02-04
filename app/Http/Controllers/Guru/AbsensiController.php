@@ -1,117 +1,70 @@
 <?php
-// app/Http/Controllers/Guru/AbsensiController.php
 
-namespace App\Http\Controllers\Guru;
+namespace App\Http\Controllers\Guru; // Pastikan namespace benar
 
 use App\Http\Controllers\Controller;
-use App\Services\AbsensiService;
-use App\Models\LokasiSekolah;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use App\Models\Absensi;
+use App\Models\User;
+use App\Models\PenempatanPkl;
+use Illuminate\Http\Request;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class AbsensiController extends Controller
 {
-    protected $absensiService;
-
-    public function __construct(AbsensiService $absensiService)
+    public function index(Request $request)
     {
-        $this->absensiService = $absensiService;
-    }
+        $guruId = Auth::guard('guru')->id();
+        $tanggal = $request->tanggal ? Carbon::parse($request->tanggal) : Carbon::today();
+        
+        // 1. Ambil daftar ID siswa bimbingan guru ini
+        $siswaIds = PenempatanPkl::where('guru_id', $guruId)->pluck('siswa_id');
 
-    public function index()
-    {
-    $lokasi = LokasiSekolah::first();
-    $statusHariIni = $this->absensiService->getStatusHariIni(Auth::user());
+        // 2. Query absensi hanya untuk siswa bimbingan
+        $query = Absensi::with('user')
+            ->whereIn('user_id', $siswaIds)
+            ->whereDate('tanggal', $tanggal);
 
-    $absensi = Absensi::where('user_id', auth()->id())
-        ->where('tanggal', now()->toDateString())
-        ->first();
+        // Filter status & search (sama seperti admin)
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
 
-    return view('guru.absensi.index', compact(
-        'lokasi',
-        'statusHariIni',
-        'absensi'
-    ));
-    }
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->whereHas('user', function($q) use ($search) {
+                $q->where('nama', 'like', "%{$search}%")
+                  ->orWhere('nip', 'like', "%{$search}%");
+            });
+        }
 
-    public function store(Request $request)
-    {
-        $request->validate([
-            'tipe' => 'required|in:masuk,pulang',
-            'latitude' => 'required|numeric',
-            'longitude' => 'required|numeric',
-            'foto' => 'required|string',
-        ], [
-            'tipe.required' => 'Tipe absensi harus dipilih',
-            'latitude.required' => 'Lokasi tidak terdeteksi',
-            'longitude.required' => 'Lokasi tidak terdeteksi',
-            'foto.required' => 'Foto selfie harus diambil',
-        ]);
+        $absensi = $query->latest()->paginate(20);
 
-        $data = [
-            'latitude' => $request->latitude,
-            'longitude' => $request->longitude,
-            'foto' => $request->foto,
+        // 3. Statistik (Hanya untuk bimbingan guru ini)
+        $allAbsensi = Absensi::whereIn('user_id', $siswaIds)->whereDate('tanggal', $tanggal)->get();
+        $totalSiswaBimbingan = $siswaIds->count();
+        
+        $statistik = [
+            'total_siswa' => $totalSiswaBimbingan,
+            'hadir' => $allAbsensi->where('status', 'hadir')->count(),
+            'terlambat' => $allAbsensi->where('status', 'terlambat')->count(),
+            'izin' => $allAbsensi->whereIn('status', ['izin_sakit', 'izin_dinas'])->count(),
+            'belum_absen' => $totalSiswaBimbingan - $allAbsensi->count(),
         ];
 
-        if ($request->tipe === 'masuk') {
-            $result = $this->absensiService->absenMasuk(Auth::user(), $data);
-        } else {
-            $result = $this->absensiService->absenPulang(Auth::user(), $data);
-        }
-
-        if ($request->expectsJson()) {
-            return response()->json($result, $result['success'] ? 200 : 400);
-        }
-
-        if ($result['success']) {
-            return redirect()->route('guru.dashboard')
-                ->with('success', $result['message']);
-        }
-
-        return back()->with('error', $result['message']);
+        return view('guru.absensi.index', compact('absensi', 'tanggal', 'statistik'));
     }
 
-    public function simpanKegiatan(Request $request)
+    public function show($id)
     {
-        $request->validate([
-            'kegiatan' => 'required|string|max:2000',
-        ]);
+        // Pastikan guru tidak bisa melihat absen siswa orang lain lewat URL
+        $guruId = Auth::guard('guru')->id();
+        $siswaIds = PenempatanPkl::where('guru_id', $guruId)->pluck('siswa_id');
 
-        $absensi = Absensi::where('user_id', auth()->id())
-            ->where('tanggal', now()->toDateString())
-            ->first();
+        $absensi = Absensi::with('user')
+            ->whereIn('user_id', $siswaIds)
+            ->findOrFail($id);
 
-        if (!$absensi || !$absensi->jam_masuk) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Anda belum absen masuk hari ini'
-            ], 400);
-        }
-
-        $absensi->kegiatan = $request->kegiatan;
-        $absensi->save();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Kegiatan berhasil disimpan'
-        ]);
-    }
-    
-
-    public function cekLokasi(Request $request)
-    {
-        $request->validate([
-            'latitude' => 'required|numeric',
-            'longitude' => 'required|numeric',
-        ]);
-
-        $result = $this->absensiService->validasiLokasi(
-            $request->latitude,
-            $request->longitude
-        );
-
-        return response()->json($result);
+        return view('guru.absensi.show', compact('absensi'));
     }
 }

@@ -1,89 +1,126 @@
 @extends('layouts.guru')
 
 @section('title', 'Pengajuan Izin')
+@section('subtitle', 'Kelola pengajuan izin guru')
 
 @section('content')
-<div class="min-h-screen bg-gray-50">
-    <!-- Header -->
-    <div class="gradient-primary px-4 py-6">
-        <div class="flex items-center justify-between">
-            <div>
-                <h1 class="text-white text-xl font-bold">📝 Pengajuan Izin</h1>
-                <p class="text-white/80 text-sm">Kelola pengajuan izin Anda</p>
-            </div>
-            <a href="{{ route('guru.izin.create') }}" class="bg-white/20 text-white px-4 py-2 rounded-lg text-sm font-medium">
-                + Ajukan
+<div class="space-y-6">
+    <!-- Filter -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+        <form method="GET" class="flex flex-wrap gap-3">
+            <select name="status" class="px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500">
+                <option value="">Semua Status</option>
+                <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
+                <option value="disetujui" {{ request('status') == 'disetujui' ? 'selected' : '' }}>Disetujui</option>
+                <option value="ditolak" {{ request('status') == 'ditolak' ? 'selected' : '' }}>Ditolak</option>
+            </select>
+            <select name="jenis" class="px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500">
+                <option value="">Semua Jenis</option>
+                <option value="sakit" {{ request('jenis') == 'sakit' ? 'selected' : '' }}>Izin Sakit</option>
+                <option value="dinas" {{ request('jenis') == 'dinas' ? 'selected' : '' }}>Izin Dinas</option>
+            </select>
+            <button type="submit" class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700">
+                Filter
+            </button>
+            @if(request()->hasAny(['status', 'jenis']))
+            <a href="{{ route('admin.izin.index') }}" class="px-4 py-2 border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50">
+                Reset
             </a>
+            @endif
+        </form>
+    </div>
+
+    @if($totalPending > 0)
+    <!-- Alert Pending -->
+    <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4 flex items-center">
+        <span class="text-2xl mr-3">⏳</span>
+        <div>
+            <p class="font-medium text-yellow-800">{{ $totalPending }} pengajuan izin menunggu persetujuan</p>
+            <p class="text-sm text-yellow-600">Segera review pengajuan yang masuk</p>
         </div>
     </div>
-    
-    <div class="px-4 py-4 pb-24">
-        @forelse($izinList as $izin)
-        <div class="bg-white rounded-xl card-shadow p-4 mb-3">
-            <div class="flex items-start justify-between">
-                <div class="flex-1">
-                    <div class="flex items-center gap-2 mb-2">
-                        @if($izin->jenis_izin == 'sakit')
+    @endif
+
+    <!-- Tabel -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Guru</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Jenis</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Tanggal</th>
+                        <th class="px-6 py-4 text-center text-xs font-semibold text-gray-500 uppercase">Durasi</th>
+                        <th class="px-6 py-4 text-center text-xs font-semibold text-gray-500 uppercase">Status</th>
+                        <th class="px-6 py-4 text-center text-xs font-semibold text-gray-500 uppercase">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-50">
+                    @forelse($izinList as $izin)
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4">
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center">
+                                    <span class="text-primary-600 font-semibold text-sm">{{ $izin->user->inisial }}</span>
+                                </div>
+                                <div class="ml-3">
+                                    <p class="text-sm font-medium text-gray-800">{{ $izin->user->nama }}</p>
+                                    <p class="text-xs text-gray-500">{{ $izin->created_at->format('d M Y H:i') }}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            @if($izin->jenis_izin == 'sakit')
                             <span class="inline-flex items-center px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">
-                                🏥 Izin Sakit
+                                🏥 Sakit
                             </span>
-                        @else
+                            @else
                             <span class="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
-                                ✈️ Izin Dinas
+                                ✈️ Dinas
                             </span>
-                        @endif
-                        
-                        @php
+                            @endif
+                        </td>
+                        <td class="px-6 py-4">
+                            <p class="text-sm text-gray-800">{{ $izin->tanggal_mulai->format('d M Y') }}</p>
+                            @if($izin->jumlah_hari > 1)
+                            <p class="text-xs text-gray-500">s/d {{ $izin->tanggal_selesai->format('d M Y') }}</p>
+                            @endif
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <span class="text-sm font-medium text-gray-800">{{ $izin->jumlah_hari }} hari</span>
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            @php
                             $statusColors = [
-                                'pending' => 'bg-yellow-100 text-yellow-700',
-                                'disetujui' => 'bg-green-100 text-green-700',
-                                'ditolak' => 'bg-red-100 text-red-700',
+                            'pending' => 'bg-yellow-100 text-yellow-700',
+                            'disetujui' => 'bg-green-100 text-green-700',
+                            'ditolak' => 'bg-red-100 text-red-700',
                             ];
-                        @endphp
-                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {{ $statusColors[$izin->status] }}">
-                            {{ $izin->status_label }}
-                        </span>
-                    </div>
-                    
-                    <p class="text-sm text-gray-600 mb-1">
-                        📅 {{ $izin->tanggal_mulai->format('d M Y') }} 
-                        @if($izin->jumlah_hari > 1)
-                            - {{ $izin->tanggal_selesai->format('d M Y') }}
-                        @endif
-                        <span class="text-gray-400">({{ $izin->jumlah_hari }} hari)</span>
-                    </p>
-                    
-                    <p class="text-sm text-gray-500 line-clamp-2">{{ $izin->keterangan }}</p>
-                    
-                    @if($izin->catatan_approval)
-                    <div class="mt-2 p-2 bg-gray-50 rounded-lg">
-                        <p class="text-xs text-gray-500">Catatan Admin:</p>
-                        <p class="text-sm text-gray-700">{{ $izin->catatan_approval }}</p>
-                    </div>
-                    @endif
-                </div>
-                
-                <a href="{{ route('guru.izin.show', $izin->id) }}" class="text-primary-600 text-sm ml-4">
-                    Detail →
-                </a>
-            </div>
+                            @endphp
+                            <span class="inline-flex px-3 py-1 rounded-full text-xs font-medium {{ $statusColors[$izin->status] }}">
+                                {{ $izin->status_label }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <a href="{{ route('guru.izin.show', $izin->id) }}" class="...">
+                                {{ $izin->status == 'pending' ? 'Review' : 'Detail' }}
+                            </a>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+                            Tidak ada data pengajuan izin
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
-        @empty
-        <div class="bg-white rounded-xl card-shadow p-8 text-center">
-            <svg class="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-            </svg>
-            <p class="text-gray-500 mb-4">Belum ada pengajuan izin</p>
-            <a href="{{ route('guru.izin.create') }}" class="inline-block px-6 py-2 bg-primary-600 text-white rounded-lg font-medium">
-                Ajukan Izin
-            </a>
-        </div>
-        @endforelse
-        
-        <!-- Pagination -->
+
         @if($izinList->hasPages())
-        <div class="mt-4">
-            {{ $izinList->links() }}
+        <div class="px-6 py-4 border-t border-gray-100">
+            {{ $izinList->withQueryString()->links() }}
         </div>
         @endif
     </div>

@@ -1,4 +1,4 @@
-@extends('layouts.guru')
+@extends('layouts.siswa')
 
 @section('title', 'Profil')
 
@@ -46,7 +46,7 @@
         <!-- Edit Profile Form -->
         <div class="bg-white rounded-xl card-shadow p-4 mb-4">
             <h3 class="font-semibold text-gray-800 mb-3">✏️ Edit Profil</h3>
-            <form action="{{ route('guru.profil.update') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
+            <form action="{{ route('siswa.profil.update') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
                 @csrf
                 @method('PUT')
                 
@@ -92,7 +92,7 @@
         <!-- Change Password -->
         <div class="bg-white rounded-xl card-shadow p-4 mb-4">
             <h3 class="font-semibold text-gray-800 mb-3">🔒 Ubah Password</h3>
-            <form action="{{ route('guru.profil.password') }}" method="POST" class="space-y-4">
+            <form action="{{ route('siswa.profil.password') }}" method="POST" class="space-y-4">
                 @csrf
                 @method('PUT')
                 

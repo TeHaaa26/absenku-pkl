@@ -11,25 +11,36 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('nip', 20)->unique();
+            // Menggunakan NISN karena ini tabel siswa
+            $table->string('nisn', 20)->unique(); 
             $table->string('nama', 100);
             $table->string('email', 100)->unique();
             $table->string('password');
-            $table->enum('role', ['admin', 'guru'])->default('guru');
+            
+            // Role hanya Admin dan Siswa (Guru nanti saja)
+            $table->enum('role', ['admin', 'siswa'])->default('siswa');
+            
             $table->string('foto_profil')->nullable();
             $table->string('no_telepon', 15)->nullable();
             $table->text('alamat')->nullable();
             $table->enum('jenis_kelamin', ['L', 'P'])->nullable();
-            $table->string('jabatan', 100)->nullable();
+            
+            // Menggunakan jurusan untuk siswa
+            $table->string('jurusan', 50)->nullable(); 
+            
             $table->enum('status', ['aktif', 'nonaktif'])->default('aktif');
             $table->timestamp('email_verified_at')->nullable();
+            
+            // Relasi ke lokasi (jika diperlukan untuk absen)
+            $table->foreignId('lokasi_id')->nullable()->constrained('lokasi_pkl')->onDelete('set null');
+
             $table->rememberToken();
             $table->timestamps();
             $table->softDeletes();
 
-            $table->index('nip');
+            // Index untuk mempercepat pencarian login
+            $table->index('nisn');
             $table->index('role');
-            $table->index('status');
         });
     }
 

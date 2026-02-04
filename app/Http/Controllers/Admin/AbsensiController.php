@@ -34,14 +34,14 @@ class AbsensiController extends Controller
 
         // Statistik
         $allAbsensi = Absensi::whereDate('tanggal', $tanggal)->get();
-        $totalGuru = User::guru()->aktif()->count();
+        $totalSiswa = User::siswa()->aktif()->count();
         
         $statistik = [
-            'total_guru' => $totalGuru,
+            'total_siswa' => $totalSiswa,
             'hadir' => $allAbsensi->where('status', 'hadir')->count(),
             'terlambat' => $allAbsensi->where('status', 'terlambat')->count(),
             'izin' => $allAbsensi->whereIn('status', ['izin_sakit', 'izin_dinas'])->count(),
-            'belum_absen' => $totalGuru - $allAbsensi->count(),
+            'belum_absen' => $totalSiswa - $allAbsensi->count(),
         ];
 
         return view('admin.absensi.index', compact('absensi', 'tanggal', 'statistik'));

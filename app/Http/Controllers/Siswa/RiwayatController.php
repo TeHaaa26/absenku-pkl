@@ -1,7 +1,7 @@
 <?php
-// app/Http/Controllers/Guru/RiwayatController.php
+// app/Http/Controllers/Siswa/RiwayatController.php
 
-namespace App\Http\Controllers\Guru;
+namespace App\Http\Controllers\Siswa;
 
 use App\Http\Controllers\Controller;
 use App\Models\Absensi;
@@ -43,7 +43,7 @@ class RiwayatController extends Controller
         $tahunSekarang = Carbon::now()->year;
         $listTahun = range($tahunSekarang - 2, $tahunSekarang);
 
-        return view('guru.riwayat.index', compact(
+        return view('siswa.riwayat.index', compact(
             'riwayat',
             'rekap',
             'bulan',
@@ -58,6 +58,6 @@ class RiwayatController extends Controller
         $absensi = Absensi::where('user_id', Auth::id())
                          ->findOrFail($id);
 
-        return view('guru.riwayat.detail', compact('absensi'));
+        return view('siswa.riwayat.detail', compact('absensi'));
     }
 }

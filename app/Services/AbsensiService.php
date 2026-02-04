@@ -4,7 +4,7 @@
 namespace App\Services;
 
 use App\Models\Absensi;
-use App\Models\LokasiSekolah;
+use App\Models\LokasiPkl;
 use App\Models\JamKerja;
 use App\Models\HariLibur;
 use App\Models\User;
@@ -64,16 +64,16 @@ class AbsensiService
     }
 
     /**
-     * Validasi apakah dalam radius sekolah
+     * Validasi apakah dalam radius tempat pkl
      */
     public function validasiLokasi(float $latitude, float $longitude): array
     {
-        $lokasi = LokasiSekolah::first();
+        $lokasi = LokasiPkl::first();
 
         if (!$lokasi) {
             return [
                 'valid' => false,
-                'message' => 'Lokasi sekolah belum diatur. Hubungi admin.',
+                'message' => 'Lokasi PKL belum diatur. Hubungi admin.',
                 'jarak' => 0,
             ];
         }
@@ -90,8 +90,8 @@ class AbsensiService
         return [
             'valid' => $dalamRadius,
             'message' => $dalamRadius
-                ? "Anda dalam radius sekolah ({$jarak}m)"
-                : "Anda di luar radius sekolah ({$jarak}m dari {$lokasi->radius}m)",
+                ? "Anda dalam radius PKL ({$jarak}m)"
+                : "Anda di luar radius PKL ({$jarak}m dari {$lokasi->radius}m)",
             'jarak' => $jarak,
             'radius' => $lokasi->radius,
         ];

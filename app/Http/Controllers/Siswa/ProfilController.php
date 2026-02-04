@@ -1,7 +1,7 @@
 <?php
-// app/Http/Controllers/Guru/ProfilController.php
+// app/Http/Controllers/Siswa/ProfilController.php
 
-namespace App\Http\Controllers\Guru;
+namespace App\Http\Controllers\Siswa;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -15,7 +15,7 @@ class ProfilController extends Controller
     public function index()
     {
         $user = Auth::user();
-        return view('guru.profil.index', compact('user'));
+        return view('siswa.profil.index', compact('user'));
     }
 
     public function update(Request $request)

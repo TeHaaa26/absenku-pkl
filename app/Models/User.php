@@ -14,16 +14,17 @@ class User extends Authenticatable
     use HasFactory, Notifiable, SoftDeletes;
 
     protected $fillable = [
-        'nip',
+        'nisn', // Ubah dari nip ke nisn
         'nama',
         'email',
         'password',
         'role',
+        'lokasi_id',
         'foto_profil',
         'no_telepon',
         'alamat',
         'jenis_kelamin',
-        'jabatan',
+        'jurusan', // Ubah dari jabatan ke kelas
         'status',
     ];
 
@@ -57,9 +58,9 @@ class User extends Authenticatable
         return $this->role === 'admin';
     }
 
-    public function getIsGuruAttribute(): bool
+    public function getIsSiswaAttribute(): bool
     {
-        return $this->role === 'guru';
+        return $this->role === 'siswa';
     }
 
     public function getFotoProfilUrlAttribute(): string
@@ -81,13 +82,28 @@ class User extends Authenticatable
     }
 
     // Scopes
-    public function scopeGuru($query)
+    public function scopeSiswa($query)
     {
-        return $query->where('role', 'guru');
+        return $query->where('role', 'siswa');
     }
 
     public function scopeAktif($query)
     {
         return $query->where('status', 'aktif');
+    }
+
+    public function lokasi()
+    {
+        return $this->belongsTo(LokasiPkl::class, 'lokasi_id');
+    }
+
+    public function getNamaLokasiAttribute(): string
+    {
+        return $this->lokasi?->nama_tempat_pkl ?? 'Lokasi Belum Diatur';
+    }
+
+    public function penempatan()
+    {
+        return $this->hasOne(PenempatanPkl::class, 'siswa_id');
     }
 }

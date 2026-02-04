@@ -3,41 +3,71 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\LokasiSekolah;
+use App\Models\LokasiPkl; // Pastikan ini sesuai dengan nama file Model kamu
+use App\Models\JamKerja;
 use Illuminate\Http\Request;
 
 class LokasiController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $lokasi = LokasiSekolah::first();
-        return view('admin.lokasi.index', compact('lokasi'));
+        // Gunakan LokasiPkl (sesuai Model yang di-import)
+        $query = LokasiPkl::with('jamKerja');
+
+        // Logic Pencarian
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('nama_tempat_pkl', 'like', "%{$search}%")
+                  ->orWhere('alamat', 'like', "%{$search}%");
+            });
+        }
+
+        $lokasi = $query->latest()->get();
+        $jamKerjas = JamKerja::all(); 
+
+        return view('admin.lokasi.index', compact('lokasi', 'jamKerjas'));
     }
 
-    public function update(Request $request)
+    public function store(Request $request)
     {
-        $request->validate([
-            'nama_sekolah' => 'required|string|max:150',
-            'alamat' => 'nullable|string',
-            'latitude' => 'required|numeric|between:-90,90',
-            'longitude' => 'required|numeric|between:-180,180',
-            'radius' => 'required|integer|min:10|max:1000',
-        ], [
-            'nama_sekolah.required' => 'Nama sekolah wajib diisi',
-            'latitude.required' => 'Latitude wajib diisi',
-            'latitude.between' => 'Latitude tidak valid',
-            'longitude.required' => 'Longitude wajib diisi',
-            'longitude.between' => 'Longitude tidak valid',
-            'radius.required' => 'Radius wajib diisi',
-            'radius.min' => 'Radius minimal 10 meter',
-            'radius.max' => 'Radius maksimal 1000 meter',
+        $validated = $request->validate([
+            'nama_tempat_pkl' => 'required|string|max:150',
+            'alamat'       => 'nullable|string',
+            'latitude'     => 'required|numeric|between:-90,90',
+            'longitude'    => 'required|numeric|between:-180,180',
+            'radius'       => 'required|integer|min:10|max:1000',
+            'jam_kerja_id' => 'nullable|exists:jam_kerja,id', // Biasanya tabel Laravel jam_kerjas (jamak)
         ]);
 
-        LokasiSekolah::updateOrCreate(
-            ['id' => 1],
-            $request->only(['nama_sekolah', 'alamat', 'latitude', 'longitude', 'radius'])
-        );
+        LokasiPkl::create($validated);
 
-        return back()->with('success', 'Lokasi sekolah berhasil diperbarui.');
+        return back()->with('success', 'Lokasi baru berhasil ditambahkan.');
+    }
+
+    public function update(Request $request, $id)
+    {
+        $lokasi = LokasiPkl::findOrFail($id);
+
+        $validated = $request->validate([
+            'nama_tempat_pkl' => 'required|string|max:150',
+            'alamat'       => 'nullable|string',
+            'latitude'     => 'required|numeric|between:-90,90',
+            'longitude'    => 'required|numeric|between:-180,180',
+            'radius'       => 'required|integer|min:10|max:1000',
+            'jam_kerja_id' => 'nullable|exists:jam_kerja,id',
+        ]);
+
+        $lokasi->update($validated);
+
+        return back()->with('success', 'Lokasi berhasil diperbarui.');
+    }
+
+    public function destroy($id)
+    {
+        $lokasi = LokasiPkl::findOrFail($id);
+        $lokasi->delete();
+
+        return back()->with('success', 'Lokasi berhasil dihapus.');
     }
 }

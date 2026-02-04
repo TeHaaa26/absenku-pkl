@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Models\User;
+use App\Models\PenempatanPkl; // Tambahkan ini
 use App\Services\AbsensiService;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -15,29 +16,41 @@ class AbsensiExport implements FromCollection, WithHeadings, WithStyles, WithCol
 {
     protected $bulan;
     protected $tahun;
+    protected $guruId; // Tambahkan property guruId
     protected $absensiService;
 
-    public function __construct($bulan, $tahun)
+    // Tambahkan $guruId = null pada parameter ketiga
+    public function __construct($bulan, $tahun, $guruId = null)
     {
         $this->bulan = $bulan;
         $this->tahun = $tahun;
+        $this->guruId = $guruId;
         $this->absensiService = new AbsensiService();
     }
 
     public function collection()
     {
-        $guru = User::guru()->aktif()->orderBy('nama')->get();
+        // 1. Tentukan query dasar
+        $query = User::siswa()->aktif();
+
+        // 2. Jika ada guruId (berarti diakses oleh Guru), filter berdasarkan bimbingan
+        if ($this->guruId) {
+            $siswaIds = PenempatanPkl::where('guru_id', $this->guruId)->pluck('siswa_id');
+            $query->whereIn('id', $siswaIds);
+        }
+
+        $siswa = $query->orderBy('nama')->get();
 
         $data = [];
         $no = 1;
 
-        foreach ($guru as $g) {
-            $rekap = $this->absensiService->getRekapBulanan($g, $this->bulan, $this->tahun);
+        foreach ($siswa as $s) {
+            $rekap = $this->absensiService->getRekapBulanan($s, $this->bulan, $this->tahun);
             
             $data[] = [
                 'no' => $no++,
-                'nip' => $g->nip,
-                'nama' => $g->nama,
+                'nisn' => $s->nisn,
+                'nama' => $s->nama,
                 'hadir' => $rekap['hadir'],
                 'terlambat' => $rekap['terlambat'],
                 'izin_sakit' => $rekap['izin_sakit'],
@@ -50,20 +63,11 @@ class AbsensiExport implements FromCollection, WithHeadings, WithStyles, WithCol
         return collect($data);
     }
 
+    // ... method headings, styles, dan columnWidths tetap sama ...
     public function headings(): array
     {
-        $namaBulan = Carbon::create()->month($this->bulan)->translatedFormat('F');
-        
         return [
-            'No',
-            'NIP',
-            'Nama Guru',
-            'Hadir',
-            'Terlambat',
-            'Izin Sakit',
-            'Izin Dinas',
-            'Alpha',
-            'Total Keterlambatan',
+            'No', 'NISN', 'Nama Siswa', 'Hadir', 'Terlambat', 'Izin Sakit', 'Izin Dinas', 'Alpha', 'Total Keterlambatan',
         ];
     }
 
@@ -77,15 +81,7 @@ class AbsensiExport implements FromCollection, WithHeadings, WithStyles, WithCol
     public function columnWidths(): array
     {
         return [
-            'A' => 5,
-            'B' => 20,
-            'C' => 30,
-            'D' => 10,
-            'E' => 12,
-            'F' => 12,
-            'G' => 12,
-            'H' => 10,
-            'I' => 20,
+            'A' => 5, 'B' => 20, 'C' => 30, 'D' => 10, 'E' => 12, 'F' => 12, 'G' => 12, 'H' => 10, 'I' => 20,
         ];
     }
 }
