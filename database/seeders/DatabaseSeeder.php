@@ -36,10 +36,17 @@ class DatabaseSeeder extends Seeder
 
         // 2. Buat Guru Pembimbing
         Guru::create([
+            'nip' => '3',
+            'nama' => 'Dzikri Pangestu',
+            'email' => 'dzikri.pangestu@absenku.com',
+            'password' => bcrypt('guru123'),
+            'jabatan' => 'Pembimbing PKL',
+        ]);
+        Guru::create([
             'nip' => '2',
-            'nama' => 'Budi Santoso, S.Pd',
-            'email' => 'budi@sekolah.sch.id',
-            'password' => bcrypt('2'),
+            'nama' => 'Ahmad Fauzi',
+            'email' => 'ahmad.fauzi@absenku.com',
+            'password' => bcrypt('guru123'),
             'jabatan' => 'Pembimbing PKL',
         ]);
 
@@ -58,23 +65,23 @@ class DatabaseSeeder extends Seeder
             'nisn' => 'ADMIN001',
             'nama' => 'Administrator',
             'email' => 'admin@absenku.com',
-            'password' => Hash::make('guru123'),
+            'password' => Hash::make('admin123'),
             'role' => 'admin',
             'status' => 'aktif',
         ]);
         User::create([
             'nisn' => '1',
             'nama' => 'Alifth',
-            'email' => 'al@absenku.com',
-            'password' => Hash::make('1'),
+            'email' => 'alifth@absenku.com',
+            'password' => Hash::make('siswa123'),
             'role' => 'siswa',
             'status' => 'aktif',
         ]);
         User::create([
             'nisn' => '3',
-            'nama' => 'u',
-            'email' => 'adfh@absenku.com',
-            'password' => Hash::make('1'),
+            'nama' => 'udin',
+            'email' => 'udin@absenku.com',
+            'password' => Hash::make('siswa123'),
             'role' => 'siswa',
             'status' => 'aktif',
         ]);

@@ -6,20 +6,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>@yield('title', 'Dashboard') - Admin AbsenKu</title>
+    <title>@yield('title', 'Dashboard') - Guru AbsenKu</title>
 
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
     <script>
@@ -69,23 +65,41 @@
         .gradient-primary {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
+
+        /* Fix Z-Index agar sidebar mobile selalu di atas peta Leaflet */
+        #mainSidebar {
+            z-index: 50 !important;
+        }
+        #sidebarOverlay {
+            z-index: 40 !important;
+        }
+        .leaflet-container {
+            z-index: 1 !important;
+        }
     </style>
 
     @stack('styles')
 </head>
 
 <body class="bg-gray-50">
+    <div id="sidebarOverlay" 
+         class="fixed inset-0 bg-black/50 transition-opacity duration-300 opacity-0 pointer-events-none md:hidden" 
+         onclick="toggleSidebar()"></div>
+
     <div class="flex h-screen overflow-hidden">
 
-        <!-- Sidebar -->
-        <aside class="hidden md:flex md:flex-shrink-0">
-            <div class="flex flex-col w-64 gradient-primary">
-                <!-- Logo -->
-                <div class="flex items-center justify-center h-16 px-4 border-b border-white/10">
+        <aside id="mainSidebar" 
+               class="fixed inset-y-0 left-0 w-64 gradient-primary transition-transform duration-300 transform -translate-x-full md:relative md:translate-x-0 md:flex md:flex-shrink-0">
+            <div class="flex flex-col w-64 h-full">
+                <div class="flex items-center justify-between h-16 px-4 border-b border-white/10">
                     <h1 class="text-xl font-bold text-white">📋 AbsenKu</h1>
+                    <button class="text-white md:hidden" onclick="toggleSidebar()">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
                 </div>
 
-                <!-- Navigation -->
                 <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
                     <a href="{{ route('guru.dashboard') }}"
                         class="sidebar-link flex items-center px-4 py-3 text-white rounded-lg {{ request()->routeIs('guru.dashboard') ? 'active' : '' }}">
@@ -103,17 +117,11 @@
                         Pengajuan Izin
 
                         @php
-                        // 1. Ambil ID Guru yang sedang login (menggunakan guard guru)
-                        $idGuru = Auth::guard('guru')->id();
-
-                        // 2. Ambil daftar ID Siswa yang dibimbing oleh guru ini melalui tabel penempatan
-                        $daftarSiswaId = \App\Models\PenempatanPkl::where('guru_id', $idGuru)
-                        ->pluck('siswa_id');
-
-                        // 3. Hitung izin yang 'pending' HANYA untuk siswa-siswa tersebut
-                        $pendingCount = \App\Models\Izin::whereIn('user_id', $daftarSiswaId)
-                        ->where('status', 'pending')
-                        ->count();
+                            $idGuru = Auth::guard('guru')->id();
+                            $daftarSiswaId = \App\Models\PenempatanPkl::where('guru_id', $idGuru)->pluck('siswa_id');
+                            $pendingCount = \App\Models\Izin::whereIn('user_id', $daftarSiswaId)
+                                ->where('status', 'pending')
+                                ->count();
                         @endphp
 
                         @if($pendingCount > 0)
@@ -137,7 +145,6 @@
                         Monitoring Absensi
                     </a>
 
-
                     <div class="pt-4 mt-4 border-t border-white/10">
                         <p class="px-4 text-xs font-semibold text-white/60 uppercase tracking-wider">Pengaturan</p>
                     </div>
@@ -151,15 +158,14 @@
                     </a>
                 </nav>
 
-                <!-- User Info -->
                 <div class="p-4 border-t border-white/10">
                     <div class="flex items-center">
                         <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-white font-semibold">
                             {{ Auth::guard('guru')->user()?->inisial }}
                         </div>
-                        <div class="ml-3 flex-1">
-                            <p class="text-sm font-medium text-white">{{ Auth::guard('guru')->user()?->nama }}</p>
-                            <p class="text-xs text-white/60">Administrator</p>
+                        <div class="ml-3 flex-1 overflow-hidden">
+                            <p class="text-sm font-medium text-white truncate">{{ Auth::guard('guru')->user()?->nama }}</p>
+                            <p class="text-xs text-white/60">Pembimbing</p>
                         </div>
                         <form action="{{ route('logout') }}" method="POST">
                             @csrf
@@ -174,24 +180,27 @@
             </div>
         </aside>
 
-        <!-- Main Content -->
-        <div class="flex flex-col flex-1 overflow-hidden">
-            <!-- Top Header -->
+        <div class="flex flex-col flex-1 overflow-hidden relative">
             <header class="bg-white border-b border-gray-200 shadow-sm">
-                <div class="flex items-center justify-between px-6 py-4">
-                    <div>
-                        <h2 class="text-xl font-bold text-gray-800">@yield('title', 'Dashboard')</h2>
-                        <p class="text-sm text-gray-500">@yield('subtitle', '')</p>
+                <div class="flex items-center justify-between px-4 md:px-6 py-4">
+                    <div class="flex items-center">
+                        <button onclick="toggleSidebar()" class="p-2 mr-3 text-gray-600 rounded-lg md:hidden hover:bg-gray-100 focus:outline-none">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                            </svg>
+                        </button>
+                        <div>
+                            <h2 class="text-lg md:text-xl font-bold text-gray-800">@yield('title', 'Dashboard')</h2>
+                            <p class="hidden sm:block text-sm text-gray-500">@yield('subtitle', '')</p>
+                        </div>
                     </div>
                     <div class="flex items-center space-x-4">
-                        <span class="text-sm text-gray-500">{{ now()->translatedFormat('l, d F Y') }}</span>
+                        <span class="text-xs md:text-sm text-gray-500">{{ now()->translatedFormat('l, d F Y') }}</span>
                     </div>
                 </div>
             </header>
 
-            <!-- Page Content -->
-            <main class="flex-1 overflow-y-auto p-6">
-                <!-- Flash Messages -->
+            <main class="flex-1 overflow-y-auto p-4 md:p-6 relative">
                 @if(session('success'))
                 <div class="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -215,7 +224,23 @@
         </div>
     </div>
 
-    <!-- Leaflet JS -->
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('mainSidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            
+            sidebar.classList.toggle('-translate-x-full');
+            
+            if (sidebar.classList.contains('-translate-x-full')) {
+                overlay.classList.add('opacity-0', 'pointer-events-none');
+                overlay.classList.remove('opacity-100', 'pointer-events-auto');
+            } else {
+                overlay.classList.remove('opacity-0', 'pointer-events-none');
+                overlay.classList.add('opacity-100', 'pointer-events-auto');
+            }
+        }
+    </script>
+
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     @stack('scripts')
