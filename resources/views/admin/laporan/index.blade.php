@@ -6,7 +6,7 @@
 @section('content')
 <div class="space-y-6">
     <!-- Filter & Export -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-2">
         <div class="flex flex-wrap items-end justify-between gap-4">
             <form method="GET" class="flex gap-3">
                 <div>
