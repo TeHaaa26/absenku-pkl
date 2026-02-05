@@ -35,4 +35,6 @@ class LokasiPkl extends Model
     {
         return $this->hasMany(PenempatanPkl::class, 'lokasi_id');
     }
+
+    
 }

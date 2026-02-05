@@ -23,17 +23,20 @@ class AbsensiController extends Controller
     {
         $user = Auth::user();
 
-        // 1. Ambil lokasi yang nempel di user secara otomatis
-        // Jangan pakai kurung () dan jangan pakai first() di sini
+        // Ambil lokasi melalui relasi penempatan
         $lokasi = $user->lokasi;
 
         if (!$lokasi) {
-            return redirect()->route('siswa.dashboard')->with('error', 'Lokasi PKL belum diatur.');
+            return redirect()->route('siswa.dashboard')->with('error', 'Anda belum ditempatkan di lokasi PKL manapun.');
         }
 
-        // 2. Ambil jam kerja dari lokasi tersebut
-        // Karena di Model LokasiPkl sudah ada relasi jamKerja, panggil langsung
-        $jamKerja = $lokasi->jamKerja ?? \App\Models\JamKerja::find(1);
+        // AMBIL JAM KERJA DARI LOKASI (Inilah kuncinya)
+        // Jika jam_kerja_id di tabel lokasi_pkl adalah 2, maka $lokasi->jamKerja akan mengambil ID 2
+        $jamKerja = $lokasi->jamKerja;
+
+        if (!$jamKerja) {
+            return redirect()->route('siswa.dashboard')->with('error', 'Jam kerja untuk lokasi ini belum diatur oleh admin.');
+        }
 
         $statusHariIni = $this->absensiService->getStatusHariIni($user);
 
@@ -41,14 +44,8 @@ class AbsensiController extends Controller
             ->whereDate('tanggal', now()->toDateString())
             ->first();
 
-        return view('siswa.absensi.index', compact(
-            'lokasi',
-            'statusHariIni',
-            'absensi',
-            'jamKerja'
-        ));
+        return view('siswa.absensi.index', compact('lokasi', 'statusHariIni', 'absensi', 'jamKerja'));
     }
-
     public function store(Request $request)
     {
         $request->validate([

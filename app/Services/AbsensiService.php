@@ -120,7 +120,7 @@ class AbsensiService
         }
 
         // Cek jam kerja
-        $jamKerja = JamKerja::first();
+        $jamKerja = $user->lokasi->jamKerja;
         $now = Carbon::now();
         $batasAbsenMasuk = Carbon::parse($jamKerja->batas_absen_masuk);
 
@@ -230,7 +230,7 @@ class AbsensiService
         }
 
         // Cek jam kerja
-        $jamKerja = JamKerja::first();
+        $jamKerja = $user->lokasi->jamKerja;
         $now = Carbon::now();
         $batasAbsenPulang = Carbon::parse($jamKerja->batas_absen_pulang);
 
@@ -283,7 +283,7 @@ class AbsensiService
     public function getStatusHariIni(User $user): array
     {
         $today = Carbon::today();
-        $jamKerja = JamKerja::first();
+        $jamKerja = $jamKerja = $user->lokasi->jamKerja;
 
         // Cek hari libur
         if ($this->isHariLibur($today)) {
